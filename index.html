@@ -104,15 +104,23 @@
   .idp-btn:hover{border-color:var(--krds-color-light-primary-50);}
   .idp-dot{width:1rem;height:1rem;border-radius:50%;flex:none;}
 
-  /* 로그인: 정부24 스타일 인증수단 카드 — login-shell의 좁은 폭을 카드형 탭이 활성화될 때만 확장 */
-  .login-shell:has(.tab-conts.active .auth-card){max-width:100rem;}
-  .auth-card{background:var(--krds-light-color-surface-white);border:1px solid var(--krds-light-color-border-default);border-radius:var(--krds-radius-medium3);padding:2rem 2.2rem;text-align:left;display:flex;flex-direction:column;gap:.8rem;width:100%;}
-  .auth-card:hover{border-color:var(--krds-color-light-primary-50);}
-  .auth-card-top{display:flex;align-items:center;gap:1rem;}
-  .auth-card-icon{flex:none;width:2.6rem;height:2.6rem;background-color:var(--ci-blue-2);}
-  .auth-card-title{font-size:1.6rem;font-weight:700;flex:1;}
-  .auth-card-desc{font-size:1.3rem;color:var(--krds-light-color-text-subtle);line-height:1.5;margin:0;}
-  .auth-section-tit{font-size:1.5rem;font-weight:700;margin:1rem 0 .2rem;}
+  /* 정부24(plus.gov.kr) 로그인 화면의 실측값(색상/여백/타이포)을 그대로 반영한 인증수단 카드 */
+  /* 카드형 인증수단 탭이 활성화된 경우 krds-tab-area(login-shell 하위)가 정부24 실측과 동일한 1200px 폭을 갖도록 확장.
+     상위 .content-layout이 이미 1200px 콘텐츠 폭 + 반응형 좌우 패딩(24px→16px @1023px 이하)을 제공하므로
+     login-shell에는 별도 패딩 없이 그 폭을 그대로 채우도록 max-width만 넓힌다 */
+  .login-shell:has(.tab-conts.active .auth-card){max-width:120rem;}
+  .auth-card-group{display:flex;flex-wrap:wrap;gap:2.4rem;}
+  .auth-card-group + .auth-section-tit{margin-top:4rem;}
+  .auth-card{background:#f8f8f8;border:1px solid #e4e4e4;border-radius:1.2rem;padding:3.2rem;text-align:left;display:flex;flex-direction:column;gap:.8rem;flex:1 1 26rem;position:relative;}
+  .auth-card:hover{border-color:var(--ci-blue-2);}
+  .auth-card-top{display:flex;align-items:center;gap:1.4rem;padding-right:3.2rem;}
+  .auth-card-icon{flex:none;width:3.2rem;height:3.2rem;background-color:#2d2d2d;}
+  .auth-card-title{font-size:1.7rem;font-weight:700;color:#131416;flex:1;line-height:1.5;}
+  .auth-card-desc{font-size:1.5rem;color:#464c53;line-height:1.5;margin:0;}
+  .auth-card-chevron{position:absolute;top:2.8rem;right:2.8rem;width:2.4rem;height:2.4rem;background-color:#2d2d2d;
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none'%3E%3Cpath d='M9.563 18.25L16.436 12 9.563 5.75' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none'%3E%3Cpath d='M9.563 18.25L16.436 12 9.563 5.75' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;}
+  .auth-section-tit{font-size:1.9rem;font-weight:700;color:#131416;margin:0 0 1.6rem;}
 
   .toast{
     position:fixed;bottom:2.2rem;left:50%;transform:translate(-50%,2rem);
@@ -334,29 +342,29 @@
               <div class="stack">
                 <p class="body-sm">지원을 신청하고 자가 진단을 수행하는 중소·중견기업 담당자는 법인 인증 수단으로 로그인합니다.</p>
 
-                <div class="grid-2">
+                <div class="auth-card-group">
                   <button type="button" class="auth-card" data-goto="home" data-role-login="company">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type03 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">공동인증서</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type03 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">공동인증서</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">개인 컴퓨터, USB 등에 보관되어 있는 인증서로 로그인</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="company">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type04 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">금융인증서</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type04 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">금융인증서</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">은행 앱 또는 인터넷뱅킹 사이트에서 발급한 금융결제원 인증서로 로그인</p>
                   </button>
                 </div>
 
                 <p class="auth-section-tit">온기업 로그인</p>
-                <div class="grid-3">
+                <div class="auth-card-group">
                   <button type="button" class="auth-card" data-goto="home" data-role-login="company">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type05 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">아이디 로그인</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type05 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">아이디 로그인</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">온기업 회원 가입 시 등록한 아이디를 이용하여 로그인</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="company">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type06 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">QR코드 로그인</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type06 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">QR코드 로그인</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">미리 등록한 생체 정보 이용(모바일 APP 생체정보를 이용하여 로그인)</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="company">
-                    <div class="auth-card-top"><i class="svg-icon ico-my auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">비회원 로그인(법인)</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-my auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">비회원 로그인(법인)</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">회원가입 없이 법인등록번호 및 사업자번호로 로그인</p>
                   </button>
                 </div>
@@ -372,37 +380,37 @@
               <div class="stack">
                 <p class="body-sm">투자유치 희망기업 정보를 조회하고 매칭을 신청하는 투자자는 개인 인증 수단으로 로그인합니다.</p>
 
-                <div class="grid-3">
+                <div class="auth-card-group">
                   <button type="button" class="auth-card" data-goto="home" data-role-login="investor">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type01 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">모바일 신분증</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type01 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">모바일 신분증</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">스마트폰의 모바일 신분증으로 로그인</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="investor">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type02 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">간편인증</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type02 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">간편인증</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">네이버, 카카오, 금융기관 등의 전자서명으로 로그인</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="investor">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type03 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">공동인증서</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type03 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">공동인증서</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">개인 컴퓨터, USB 등에 보관되어 있는 인증서로 로그인</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="investor">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type04 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">금융인증서</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type04 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">금융인증서</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">은행 앱 또는 인터넷뱅킹 사이트에서 발급한 금융결제원 인증서로 로그인</p>
                   </button>
                 </div>
 
                 <p class="auth-section-tit">온기업 로그인</p>
-                <div class="grid-3">
+                <div class="auth-card-group">
                   <button type="button" class="auth-card" data-goto="home" data-role-login="investor">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type05 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">아이디 로그인</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type05 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">아이디 로그인</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">온기업 회원 가입 시 등록한 아이디를 이용하여 로그인</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="investor">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type06 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">QR코드 로그인</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type06 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">QR코드 로그인</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">미리 등록한 생체 정보 이용(모바일 APP 생체정보를 이용하여 로그인)</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="investor">
-                    <div class="auth-card-top"><i class="svg-icon ico-my auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">비회원 로그인(개인)</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-my auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">비회원 로그인(개인)</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">회원가입 없이 성명, 주민등록번호로 로그인</p>
                   </button>
                 </div>
@@ -418,29 +426,29 @@
               <div class="stack">
                 <p class="body-sm">캠코와 업무협약을 체결한 유관기관·금융기관 담당자는 법인 인증 수단으로 로그인합니다.</p>
 
-                <div class="grid-2">
+                <div class="auth-card-group">
                   <button type="button" class="auth-card" data-goto="home" data-role-login="partner">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type03 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">공동인증서</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type03 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">공동인증서</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">개인 컴퓨터, USB 등에 보관되어 있는 인증서로 로그인</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="partner">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type04 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">금융인증서</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type04 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">금융인증서</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">은행 앱 또는 인터넷뱅킹 사이트에서 발급한 금융결제원 인증서로 로그인</p>
                   </button>
                 </div>
 
                 <p class="auth-section-tit">온기업 로그인</p>
-                <div class="grid-3">
+                <div class="auth-card-group">
                   <button type="button" class="auth-card" data-goto="home" data-role-login="partner">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type05 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">아이디 로그인</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type05 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">아이디 로그인</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">온기업 회원 가입 시 등록한 아이디를 이용하여 로그인</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="partner">
-                    <div class="auth-card-top"><i class="svg-icon ico-login-type06 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">QR코드 로그인</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-login-type06 auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">QR코드 로그인</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">미리 등록한 생체 정보 이용(모바일 APP 생체정보를 이용하여 로그인)</p>
                   </button>
                   <button type="button" class="auth-card" data-goto="home" data-role-login="partner">
-                    <div class="auth-card-top"><i class="svg-icon ico-my auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">비회원 로그인(법인)</span><i class="svg-icon ico-angle right"></i></div>
+                    <div class="auth-card-top"><i class="svg-icon ico-my auth-card-icon" aria-hidden="true"></i><span class="auth-card-title">비회원 로그인(법인)</span></div><i class="auth-card-chevron"></i>
                     <p class="auth-card-desc">회원가입 없이 기관등록번호 및 사업자번호로 로그인</p>
                   </button>
                 </div>
