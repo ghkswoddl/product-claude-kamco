@@ -1,0 +1,2196 @@
+<meta charset="UTF-8" />
+<title>온기업 — KRDS 기반 리디자인</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="assets/krds/css/krds.min.css" />
+<style>
+  @font-face{font-family:"Pretendard GOV";src:url("assets/krds/fonts/PretendardGOV-Regular.subset.woff2") format("woff2"),url("assets/krds/fonts/PretendardGOV-Regular.subset.woff") format("woff");font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:"Pretendard GOV";src:url("assets/krds/fonts/PretendardGOV-Medium.subset.woff2") format("woff2"),url("assets/krds/fonts/PretendardGOV-Medium.subset.woff") format("woff");font-weight:500;font-style:normal;font-display:swap;}
+  @font-face{font-family:"Pretendard GOV";src:url("assets/krds/fonts/PretendardGOV-Bold.subset.woff2") format("woff2"),url("assets/krds/fonts/PretendardGOV-Bold.subset.woff") format("woff");font-weight:700;font-style:normal;font-display:swap;}
+
+  :root{
+    /* 온기업 CI(브랜드) 전용 토큰 — oncorp.or.kr CI 가이드(캠코블루/캠코레드) 실측값, KRDS 토큰 체계와 별도 유지 */
+    --ci-blue-1:#0A4E96; --ci-blue-2:#003876;
+    --ci-red-1:#EE2925; --ci-red-2:#BF1016;
+    --ci-grey-1:#EDEEEE; --ci-grey-2:#AEB1B5;
+  }
+
+  /* krds.min.css가 제공하지 않는 이 서비스 고유의 레이아웃/콘텐츠 보조 스타일만 최소로 유지 */
+  .num{font-variant-numeric:tabular-nums;}
+  .site{min-height:100vh;}
+  .screen{padding:3rem 0 6rem;display:none;}
+  .screen.active{display:block;}
+  .screen-head{margin-bottom:2.2rem;max-width:64rem;}
+  .screen-head .eyebrow{font-size:1.2rem;color:var(--krds-light-color-text-primary);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
+  .screen-head p{margin-top:.8rem;font-size:1.6rem;font-weight:400;color:var(--krds-light-color-text-subtle);max-width:60ch;line-height:1.6;}
+
+  .main-inner{max-width:120rem;margin:0 auto;padding:0 2rem;}
+  .content-layout{display:grid;grid-template-columns:1fr;}
+  .content-layout.has-lnb{grid-template-columns:24rem 1fr;gap:3.6rem;align-items:start;}
+  .lnb-wrap{display:none;}
+  .content-layout.has-lnb .lnb-wrap{display:block;position:sticky;top:8rem;align-self:start;padding:2.4rem 0 4rem;}
+  @media (max-width:900px){
+    .content-layout.has-lnb{grid-template-columns:1fr;}
+    .content-layout.has-lnb .lnb-wrap{display:none;}
+  }
+
+  .box{background:var(--krds-light-color-surface-white);border:1px solid var(--krds-light-color-border-default);border-radius:var(--krds-radius-medium3);}
+  .box-pad{padding:2rem 2.2rem;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;}
+  .stack{display:flex;flex-direction:column;gap:1.4rem;}
+  .row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
+  @media (max-width:767px){ .grid-2,.grid-3{grid-template-columns:1fr;} }
+
+  /* home 히어로 */
+  .hero{background:linear-gradient(155deg, var(--ci-blue-2), var(--krds-color-light-primary-60));color:#fff;border-radius:var(--krds-radius-medium3);padding:4rem 3.6rem;display:flex;flex-direction:column;gap:1.4rem;}
+  .hero h1{color:#fff;font-size:3.2rem;line-height:1.25;max-width:20ch;}
+  .hero p{color:rgba(255,255,255,.82);max-width:56ch;font-size:1.5rem;line-height:1.6;}
+  .hero .cta-row{display:flex;gap:1rem;margin-top:.6rem;flex-wrap:wrap;}
+
+  /* 프로세스/흐름 다이어그램(정적 설명 도해 — KRDS 명명 컴포넌트 아님) */
+  .process-row{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;}
+  .process-step{flex:1;min-width:16rem;background:var(--krds-light-color-surface-white);border:1px solid var(--krds-light-color-border-default);border-radius:var(--krds-radius-medium2);padding:1.4rem;position:relative;}
+  .process-step + .process-step{margin-left:2.2rem;}
+  .process-step + .process-step::before{content:"→";position:absolute;left:-2rem;top:50%;transform:translateY(-50%);color:var(--krds-light-color-text-subtle);font-size:1.3rem;}
+  .process-step .pn{font-size:1.05rem;color:var(--krds-light-color-text-primary);font-weight:700;}
+  .process-step h4{font-size:1.8rem;font-weight:600;line-height:1.4;margin:.4rem 0 0;}
+  .process-step p{font-size:1.4rem;color:var(--krds-light-color-text-subtle);margin-top:.4rem;line-height:1.5;}
+  @media (max-width:767px){
+    .process-row{flex-direction:column;}
+    .process-step + .process-step{margin-left:0;margin-top:2.2rem;}
+    .process-step + .process-step::before{content:"↓";left:50%;top:-2rem;transform:translateX(-50%);}
+  }
+
+  .flow-diagram{display:flex;align-items:center;justify-content:center;gap:0;padding:1.8rem .6rem;flex-wrap:wrap;}
+  .flow-node{background:var(--krds-light-color-surface-primary-subtler);border:1px solid var(--krds-light-color-border-primary-light);color:var(--ci-blue-2);border-radius:var(--krds-radius-medium2);padding:1.4rem 1.8rem;font-size:1.25rem;font-weight:700;text-align:center;}
+  .flow-arrow{color:var(--krds-light-color-text-subtle);font-size:1.6rem;padding:0 1.2rem;}
+
+  .stat{display:flex;flex-direction:column;gap:.4rem;}
+  .stat .n{font-size:2.2rem;font-weight:700;}
+  .stat .l{font-size:1.2rem;color:var(--krds-light-color-text-subtle);}
+
+  .map-placeholder{
+    height:25rem;border-radius:var(--krds-radius-medium3);
+    background:repeating-linear-gradient(45deg, var(--krds-light-color-background-alternative), var(--krds-light-color-background-alternative) 12px, var(--krds-light-color-surface-white) 12px, var(--krds-light-color-surface-white) 24px);
+    border:1px solid var(--krds-light-color-border-default);display:flex;flex-direction:column;gap:.6rem;align-items:center;justify-content:center;
+    color:var(--krds-light-color-text-subtle);font-size:1.25rem;
+  }
+
+  /* 온기업 CI(브랜드 마크) — 헤더/푸터/센터소개 CI 화면에서 공용 */
+  .ci-mark{flex:none;display:block;}
+  #krds-header .header-container .logo a{background-image:none !important;} /* krds.min.css 기본 KRDS 워드마크 배경을 제거하고 온기업 CI로 교체 */
+  #krds-footer .f-logo{background-image:none !important;}
+  .ci-brand{display:flex;align-items:center;gap:.8rem;text-decoration:none;width:100%;height:100%;}
+  .ci-brand-text{display:flex;flex-direction:column;gap:.1rem;line-height:1.15;}
+  .ci-brand-eyebrow{font-size:1rem;font-weight:600;color:var(--krds-light-color-text-subtle);}
+  .ci-brand-word{font-size:1.8rem;font-weight:800;color:var(--ci-blue-2);letter-spacing:-0.02em;}
+  .footer-ci{display:flex;align-items:center;gap:1rem;}
+  .footer-ci .ci-brand-word{font-size:1.5rem;}
+
+  /* 신청 현황 미니 트래커(krds-step-wrap 재사용, 5단계 상태 표시용 축소 변형) */
+  .mini-step-wrap{margin-top:1.6rem;}
+  .mini-step-wrap .step-tit{font-size:1.1rem;}
+
+  /* 마이페이지 신청 현황 카드 */
+  .app-row{border:1px solid var(--krds-light-color-border-default);border-radius:var(--krds-radius-medium3);padding:1.6rem 1.8rem;background:var(--krds-light-color-surface-white);}
+  .app-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1.2rem;flex-wrap:wrap;}
+  .expand-panel{margin-top:1.4rem;padding:1.4rem;background:var(--krds-light-color-background-alternative);border-radius:var(--krds-radius-medium2);display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap;}
+
+  /* 로그인: 소셜 인증 버튼 */
+  .login-shell{max-width:38rem;margin:2rem auto 0;}
+  .idp-btn{display:flex;align-items:center;gap:1rem;padding:1.2rem 1.4rem;border:1px solid var(--krds-light-color-border-default);border-radius:var(--krds-radius-medium2);font-size:1.35rem;font-weight:600;background:var(--krds-light-color-surface-white);width:100%;}
+  .idp-btn:hover{border-color:var(--krds-color-light-primary-50);}
+  .idp-dot{width:1rem;height:1rem;border-radius:50%;flex:none;}
+
+  .toast{
+    position:fixed;bottom:2.2rem;left:50%;transform:translate(-50%,2rem);
+    background:var(--ci-blue-2);color:#fff;padding:1.1rem 1.8rem;border-radius:99px;font-size:1.3rem;
+    opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;
+    box-shadow:var(--krds-light-elevation-2);z-index:600;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  .caption{font-size:1.1rem;color:var(--krds-light-color-text-subtle);}
+  .doc-req{font-size:1.05rem;color:var(--krds-light-color-text-danger);font-weight:700;}
+
+  @media (max-width:767px){ .hero{padding:2.8rem 2rem;} }
+</style>
+
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+  <defs>
+    <symbol id="ci-wing" viewBox="0 0 100 100">
+      <linearGradient id="ciRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--ci-red-1)"/><stop offset="100%" stop-color="var(--ci-red-2)"/>
+      </linearGradient>
+      <linearGradient id="ciGreyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--ci-grey-1)"/><stop offset="100%" stop-color="var(--ci-grey-2)"/>
+      </linearGradient>
+      <linearGradient id="ciBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--ci-blue-1)"/><stop offset="100%" stop-color="var(--ci-blue-2)"/>
+      </linearGradient>
+      <polygon points="16,40 80,6 64,42" fill="url(#ciRedGrad)"/>
+      <polygon points="8,48 60,24 44,68 22,72" fill="url(#ciGreyGrad)"/>
+      <polygon points="56,32 94,32 94,94 56,58" fill="url(#ciBlueGrad)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- 건너뛰기 링크 -->
+<div id="krds-skip-link">
+  <a href="#breadcrumb">본문 바로가기</a>
+</div>
+
+<div class="site">
+  <!-- masthead -->
+  <div id="krds-masthead">
+    <div class="toggle-wrap">
+      <div class="toggle-head">
+        <div class="inner">
+          <span class="nuri-txt">이 누리집은 대한민국 공식 전자정부 누리집입니다.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- header -->
+  <header id="krds-header">
+    <div class="header-in">
+      <div class="header-container">
+        <div class="inner">
+          <div class="header-utility">
+            <ul class="utility-list">
+              <li><a href="#" class="krds-btn small text" target="_blank" title="새 창 열기">정책브리핑 <i class="svg-icon ico-go"></i></a></li>
+              <li><a href="#" class="krds-btn small text" target="_blank" title="새 창 열기">국민신문고 <i class="svg-icon ico-go"></i></a></li>
+              <li><a href="#" class="krds-btn small text" target="_blank" title="새 창 열기">캠코 통합 로그인 <i class="svg-icon ico-go"></i></a></li>
+              <li>
+                <button type="button" class="krds-btn small text open-modal" data-target="sitemap-overlay">사이트맵</button>
+              </li>
+              <li>
+                <div class="krds-drop-wrap krds-resize" data-adjust="scale">
+                  <button type="button" class="krds-btn small text drop-btn">글자·화면 설정 <i class="svg-icon ico-toggle"></i></button>
+                  <div class="drop-menu">
+                    <div class="drop-in">
+                      <ul class="drop-list">
+                        <li><button type="button" class="item-link sm" data-adjust-scale="sm">작게</button></li>
+                        <li><button type="button" class="item-link md active" data-adjust-scale="md">보통</button></li>
+                        <li><button type="button" class="item-link lg" data-adjust-scale="lg">조금 크게</button></li>
+                        <li><button type="button" class="item-link xlg" data-adjust-scale="xlg">크게</button></li>
+                      </ul>
+                      <div class="drop-bottom">
+                        <button type="button" class="krds-btn medium text" data-adjust-scale="md"><i class="svg-icon ico-reset"></i> 초기화</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="header-branding">
+            <h2 class="logo">
+              <a href="#/home" class="ci-brand">
+                <svg class="ci-mark" width="30" height="30" aria-hidden="true"><use href="#ci-wing"/></svg>
+                <span class="ci-brand-text">
+                  <span class="ci-brand-eyebrow">기업구조혁신지원센터</span>
+                  <span class="ci-brand-word">온기업</span>
+                </span>
+              </a>
+            </h2>
+            <div class="header-actions">
+              <a href="#/login" class="btn-navi login">로그인</a>
+              <a href="#/signup" class="btn-navi join">회원가입</a>
+              <button type="button" class="btn-navi all" aria-controls="mobile-nav">전체메뉴</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 메인메뉴 : 데스크탑 -->
+      <nav class="krds-main-menu">
+        <div class="inner">
+          <ul class="gnb-menu" id="gnb-menu"></ul>
+        </div>
+      </nav>
+      <!-- //메인메뉴 : 데스크탑 -->
+    </div>
+
+    <!-- 메인메뉴 : 모바일 -->
+    <div id="mobile-nav" class="krds-main-menu-mobile">
+      <div class="gnb-wrap">
+        <div class="gnb-header">
+          <div class="gnb-utils">
+            <ul class="utility-list">
+              <li><button type="button" class="krds-btn xsmall text open-modal" data-target="sitemap-overlay">사이트맵</button></li>
+            </ul>
+          </div>
+          <div class="gnb-login">
+            <a href="#/login" class="krds-btn large text"><i class="svg-icon ico-log"></i> 로그인 / 회원가입</a>
+          </div>
+        </div>
+        <div class="gnb-body">
+          <div class="gnb-menu" id="gnb-menu-mobile">
+            <div class="menu-wrap"><ul id="gnb-mobile-tabs"></ul></div>
+            <div class="submenu-wrap" id="gnb-mobile-panels"></div>
+          </div>
+        </div>
+        <button type="button" class="krds-btn medium icon" id="close-nav">
+          <span class="sr-only">전체메뉴 닫기</span>
+          <i class="svg-icon ico-popup-close"></i>
+        </button>
+      </div>
+    </div>
+    <!-- //메인메뉴 : 모바일 -->
+  </header>
+  <!-- //header -->
+
+  <!-- breadcrumb + 로그인 사용자 표시 -->
+  <div class="krds-contents-wrap">
+    <div class="inner" style="display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap;padding-top:1.2rem;">
+      <nav class="krds-breadcrumb-wrap" aria-label="현재 경로" id="breadcrumb">
+        <ol class="breadcrumb" id="crumb"></ol>
+      </nav>
+      <div class="krds-badge outline-gray" id="role-chip" style="gap:.6rem;">
+        <span id="role-chip-text">이수민 재무담당 · ㈜한빛정밀</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-inner" id="main-content" tabindex="-1">
+  <div class="content-layout" id="content-layout">
+    <aside class="lnb-wrap" id="lnb-wrap" aria-label="현재 섹션 메뉴"></aside>
+    <div class="content-body">
+
+    <!-- 홈 -->
+    <section class="screen active" data-screen="home">
+      <div class="hero">
+        <h1>복잡한 캠코 기업지원 제도, 온기업에서 한 번에 확인하고 신청하세요</h1>
+        <p>맞춤형 진단부터 온라인 신청, 투자자 매칭, 공지사항까지 — 중소·중견기업 지원 제도를 하나의 사이트에서 이용할 수 있습니다.</p>
+        <div class="cta-row">
+          <button type="button" class="krds-btn primary" data-goto="program-diagnosis">내게 맞는 프로그램 찾기</button>
+          <button type="button" class="krds-btn secondary on" data-goto="program-overview">기업지원 프로그램 한눈에 보기</button>
+        </div>
+      </div>
+
+      <ul class="krds-structured-list type-full" style="margin-top:2rem;">
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">01</span></div><div class="card-body"><a href="#/center-mission" class="c-text"><p class="c-tit"><span class="span">센터소개</span></p><p class="c-txt">운영목적 및 역할, 온기업 CI, 오시는 길</p></a></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">02</span></div><div class="card-body"><a href="#/program-overview" class="c-text"><p class="c-tit"><span class="span">기업지원 프로그램</span></p><p class="c-txt">자가진단·S&amp;LB·회생워크아웃·펀드 등 핵심 서비스</p></a></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">03</span></div><div class="card-body"><a href="#/investor-companies" class="c-text"><p class="c-tit"><span class="span">투자자 라운지</span></p><p class="c-txt">매칭대상 기업정보 조회, 투자제안·의향서 제출</p></a></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">04</span></div><div class="card-body"><a href="#/vdr-detail" class="c-text"><p class="c-tit"><span class="span">국유증권 가상데이터룸</span></p><p class="c-txt">매각 대상기업 상세 조회(VDR)</p></a></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">05</span></div><div class="card-body"><a href="#/board-notice" class="c-text"><p class="c-tit"><span class="span">고객마당</span></p><p class="c-txt">공지·보도자료, 자료실, FAQ&amp;Q/A, 신고센터</p></a></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">06</span></div><div class="card-body"><a href="#/mypage-status" class="c-text"><p class="c-tit"><span class="span">마이페이지</span></p><p class="c-txt">신청·진행 현황, 서류 관리, 회원정보</p></a></div></div></li>
+      </ul>
+    </section>
+
+    <!-- 로그인 -->
+    <section class="screen" data-screen="login">
+      <div class="screen-head">
+        <h1>로그인</h1>
+        <p>사용자 유형에 맞는 방식으로 로그인하세요.</p>
+      </div>
+
+      <div class="login-shell">
+        <div class="krds-tab-area layer">
+          <div class="tab line full">
+            <ul role="tablist">
+              <li id="tab-role-company" role="tab" aria-selected="true" aria-controls="panel-role-company" class="active"><button type="button" class="btn-tab">기업 고객<i class="sr-only created"> 선택됨</i></button></li>
+              <li id="tab-role-staff" role="tab" aria-selected="false" aria-controls="panel-role-staff"><button type="button" class="btn-tab">캠코 관리자</button></li>
+              <li id="tab-role-admin" role="tab" aria-selected="false" aria-controls="panel-role-admin"><button type="button" class="btn-tab">최고 관리자</button></li>
+            </ul>
+          </div>
+          <div class="tab-conts-wrap">
+            <section id="panel-role-company" aria-labelledby="tab-role-company" class="tab-conts active">
+              <h3 class="sr-only">기업 고객 로그인</h3>
+              <div class="box box-pad stack">
+                <p class="body-sm">지원을 신청하고 자가 진단을 수행하는 중소·중견기업 담당자는 민간 간편인증으로 로그인합니다.</p>
+                <button type="button" class="idp-btn" data-goto="home" data-role-login="company"><span class="idp-dot" style="background:#FEE500;"></span>카카오로 로그인</button>
+                <button type="button" class="idp-btn" data-goto="home" data-role-login="company"><span class="idp-dot" style="background:#00C73C;"></span>네이버로 로그인</button>
+                <button type="button" class="idp-btn" data-goto="home" data-role-login="company"><span class="idp-dot" style="background:#0A2540;"></span>PASS 인증서로 로그인</button>
+                <div style="text-align:center;font-size:1.2rem;">
+                  처음이신가요? <a href="#/signup" class="krds-btn text small">회원가입</a>
+                </div>
+              </div>
+            </section>
+            <section id="panel-role-staff" aria-labelledby="tab-role-staff" class="tab-conts">
+              <h3 class="sr-only">캠코 관리자 로그인</h3>
+              <div class="box box-pad stack">
+                <p class="body-sm">접수된 신청 서류를 심사하고 상태를 변경하며, 공고를 관리하는 내부 직원용 계정입니다. 계정이 없다면 소속 부서 시스템관리자에게 문의하세요.</p>
+                <div class="fieldset">
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="staff-id">사번</label></div>
+                    <div class="form-conts"><input type="text" id="staff-id" class="krds-input" placeholder="예: KAM2026-0142" /></div>
+                  </div>
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="staff-pw">비밀번호</label></div>
+                    <div class="form-conts"><input type="password" id="staff-pw" class="krds-input" placeholder="비밀번호" /></div>
+                  </div>
+                </div>
+                <button type="button" class="krds-btn primary" id="staff-login-btn" style="width:100%;">로그인</button>
+                <div style="text-align:center;font-size:1.2rem;"><a href="#" class="krds-btn text small">비밀번호를 잊으셨나요?</a></div>
+              </div>
+            </section>
+            <section id="panel-role-admin" aria-labelledby="tab-role-admin" class="tab-conts">
+              <h3 class="sr-only">최고 관리자 로그인</h3>
+              <div class="box box-pad stack">
+                <p class="body-sm">플랫폼 전체 통계 확인 및 권한을 관리하는 마스터 계정입니다. IT운영팀에서만 발급하며, 2단계 인증(OTP)이 추가로 필요합니다.</p>
+                <div class="fieldset">
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="admin-id">관리자 ID</label></div>
+                    <div class="form-conts"><input type="text" id="admin-id" class="krds-input" placeholder="관리자 ID" /></div>
+                  </div>
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="admin-pw">비밀번호</label></div>
+                    <div class="form-conts"><input type="password" id="admin-pw" class="krds-input" placeholder="비밀번호" /></div>
+                  </div>
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="admin-otp">OTP 인증번호</label></div>
+                    <div class="form-conts"><input type="text" id="admin-otp" class="krds-input" placeholder="6자리 인증번호" /></div>
+                  </div>
+                </div>
+                <button type="button" class="krds-btn primary" id="admin-login-btn" style="width:100%;">로그인</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 회원가입 (기업 고객 전용) -->
+    <section class="screen" data-screen="signup">
+      <div class="screen-head">
+        <h1>회원가입</h1>
+        <p>지원을 신청하고 자가 진단을 수행하는 기업 고객(중소·중견기업 담당자) 전용 회원가입입니다. 가입 후 로그인하여 소속 기업의 권한을 연동하세요.</p>
+      </div>
+      <div class="box login-shell">
+        <div class="box-pad stack">
+          <div class="fieldset">
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="su-name">이름</label></div><div class="form-conts"><input type="text" id="su-name" class="krds-input" placeholder="홍길동" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="su-email">이메일(아이디)</label></div><div class="form-conts"><input type="text" id="su-email" class="krds-input" placeholder="example@company.co.kr" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="su-pw">비밀번호</label></div><div class="form-conts"><input type="password" id="su-pw" class="krds-input" placeholder="영문·숫자·특수문자 조합 8자 이상" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="su-pw2">비밀번호 확인</label></div><div class="form-conts"><input type="password" id="su-pw2" class="krds-input" /></div></div>
+            <div class="form-group" style="width:100%;">
+              <div class="form-tit"><label for="su-phone">휴대폰번호</label></div>
+              <div class="form-conts row" style="flex-wrap:nowrap;">
+                <input type="text" id="su-phone" class="krds-input" placeholder="010-0000-0000" style="flex:1;" />
+                <button type="button" class="krds-btn tertiary small" id="su-send-otp" style="flex:none;">인증번호 받기</button>
+              </div>
+            </div>
+            <div class="form-group" id="su-otp-field" style="display:none;width:100%;">
+              <div class="form-tit"><label for="su-otp">인증번호</label></div>
+              <div class="form-conts row" style="flex-wrap:nowrap;">
+                <input type="text" id="su-otp" class="krds-input" placeholder="6자리 숫자" style="flex:1;" />
+                <button type="button" class="krds-btn tertiary small" id="su-verify-otp" style="flex:none;">확인</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="krds-check-area chk-column" style="margin-top:.6rem;">
+            <div class="krds-form-check"><input type="checkbox" id="su-agree-terms" /><label for="su-agree-terms">[필수] 이용약관 동의</label></div>
+            <div class="krds-form-check"><input type="checkbox" id="su-agree-privacy" /><label for="su-agree-privacy">[필수] 개인정보 수집·이용 동의</label></div>
+            <div class="krds-form-check"><input type="checkbox" id="su-agree-marketing" /><label for="su-agree-marketing">[선택] 마케팅 정보 수신 동의</label></div>
+          </div>
+
+          <button type="button" class="krds-btn primary" id="su-submit" disabled style="width:100%;margin-top:.6rem;">가입하기</button>
+          <div style="text-align:center;font-size:1.2rem;">이미 계정이 있으신가요? <a href="#/login" class="krds-btn text small">로그인</a></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 기업지원 프로그램 한눈에 보기 -->
+    <section class="screen" data-screen="program-overview">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 캠코 지원프로그램 한눈에 보기</div>
+        <h1>캠코 지원프로그램 한눈에 보기</h1>
+        <p>기업 상황에 맞는 캠코의 자산 유동화·경영정상화·투자 지원 제도를 한 화면에서 비교하고 바로 신청할 수 있습니다.</p>
+      </div>
+      <ul class="krds-structured-list type-full">
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">자가진단</span></div><div class="card-body"><a href="#/program-diagnosis" class="c-text"><p class="c-tit"><span class="span">내게 맞는 지원 프로그램 찾기</span></p><p class="c-txt">재무정보를 입력하면 AI 진단으로 적합한 제도를 추천합니다.</p></a><div class="c-btn"><a href="#/program-diagnosis" class="krds-btn secondary">자가진단 하기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">투자 매칭</span></div><div class="card-body"><a href="#/program-investor-match" class="c-text"><p class="c-tit"><span class="span">투자자 매칭 지원</span></p><p class="c-txt">투자유치가 필요한 기업을 투자자에게 노출하고 매칭을 지원합니다.</p></a><div class="c-btn"><a href="#/program-investor-match" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">자산 유동화</span></div><div class="card-body"><a href="#/program-snlb" class="c-text"><p class="c-tit"><span class="span">자산매입 후 임대(S&amp;LB)</span></p><p class="c-txt">보유 부동산·설비를 매입 후 재임대하여 즉시 유동성을 확보합니다.</p></a><div class="c-btn"><a href="#/program-snlb" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">자산 유동화</span></div><div class="card-body"><a href="#/program-ship-lb" class="c-text"><p class="c-tit"><span class="span">선박매입 후 임대</span></p><p class="c-txt">보유 선박을 매입 후 재용선하여 해운기업의 유동성을 지원합니다.</p></a><div class="c-btn"><a href="#/program-ship-lb" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-warning">경영정상화</span></div><div class="card-body"><a href="#/program-workout" class="c-text"><p class="c-tit"><span class="span">회생·워크아웃 기업 지원</span></p><p class="c-txt">부실채권 인수, 채권 재조정 등으로 경영정상화를 지원합니다.</p></a><div class="c-btn"><a href="#/program-workout" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-warning">투자·출자</span></div><div class="card-body"><a href="#/program-fund" class="c-text"><p class="c-tit"><span class="span">펀드 출·투자(기업지원펀드)</span></p><p class="c-txt">민간 구조조정 펀드에 출자자(LP)로 참여하여 지분투자·자금을 지원합니다.</p></a><div class="c-btn"><a href="#/program-fund" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-warning">투자·출자</span></div><div class="card-body"><a href="#/program-fund-restructure" class="c-text"><p class="c-tit"><span class="span">기업구조혁신펀드 운용</span></p><p class="c-txt">재간접펀드(FoF) 구조로 조성·운용되는 구조조정 투자 목적의 정책펀드입니다.</p></a><div class="c-btn"><a href="#/program-fund-restructure" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-warning">투자·출자</span></div><div class="card-body"><a href="#/program-fund-pf" class="c-text"><p class="c-tit"><span class="span">PF사업장 정상화 지원펀드</span></p><p class="c-txt">부실·부실우려 PF사업장의 정상화를 지원하는 펀드에 앵커 투자자로 참여합니다.</p></a><div class="c-btn"><a href="#/program-fund-pf" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-warning">채권 지원</span></div><div class="card-body"><a href="#/program-bond" class="c-text"><p class="c-tit"><span class="span">담보부사채 발행지원</span></p><p class="c-txt">담보부사채 발행 시 신용보강을 지원하여 자금조달을 돕습니다.</p></a><div class="c-btn"><a href="#/program-bond" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge outline-gray">안내</span></div><div class="card-body"><a href="#/program-partner-policy" class="c-text"><p class="c-tit"><span class="span">유관기관 지원정책 안내</span></p><p class="c-txt">중소벤처기업부 등 유관기관의 기업지원 정책을 함께 확인하세요.</p></a><div class="c-btn"><a href="#/program-partner-policy" class="krds-btn secondary">자세히 보기</a></div></div></div></li>
+      </ul>
+    </section>
+
+    <!-- 내게 맞는 지원 프로그램 찾기 -->
+    <section class="screen" data-screen="program-diagnosis">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 내게 맞는 지원 프로그램 찾기(자가진단)</div>
+        <h1>내게 맞는 프로그램 찾기</h1>
+        <p>기업 규모와 재무 상태를 입력하면 AI 진단 설문을 통해 적합한 캠코 지원 제도를 매칭해드립니다.</p>
+      </div>
+      <div class="box box-pad stack" style="max-width:64rem;">
+        <h3>재무정보 입력</h3>
+        <div class="fieldset">
+          <div class="form-col-group" style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;">
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="diag-revenue">최근 매출액(억 원)</label></div><div class="form-conts"><input type="number" id="diag-revenue" class="krds-input" value="86" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="diag-debt">부채비율(%)</label></div><div class="form-conts"><input type="number" id="diag-debt" class="krds-input" value="214" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="diag-equity">자기자본(억 원)</label></div><div class="form-conts"><input type="number" id="diag-equity" class="krds-input" value="12" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="diag-size">기업 규모</label></div><div class="form-conts"><select id="diag-size" class="krds-form-select" style="width:100%;"><option>중소기업</option><option>중견기업</option></select></div></div>
+          </div>
+        </div>
+        <h3 style="margin-top:.6rem;">검토 중인 지원 유형</h3>
+        <div class="krds-check-area">
+          <div class="krds-form-check"><input type="checkbox" id="diag-chk-1" checked /><label for="diag-chk-1">자산매입(S&amp;LB)</label></div>
+          <div class="krds-form-check"><input type="checkbox" id="diag-chk-2" checked /><label for="diag-chk-2">부실채권 인수</label></div>
+          <div class="krds-form-check"><input type="checkbox" id="diag-chk-3" /><label for="diag-chk-3">채권 재조정</label></div>
+          <div class="krds-form-check"><input type="checkbox" id="diag-chk-4" /><label for="diag-chk-4">펀드 투자</label></div>
+        </div>
+        <div class="row" style="margin-top:.8rem;">
+          <button type="button" class="krds-btn primary" id="run-diagnosis">진단 실행</button>
+          <span id="diagnosis-status" class="caption"></span>
+        </div>
+      </div>
+
+      <div class="stack" id="diagnosis-result" style="max-width:72rem;margin-top:2.2rem;display:none;">
+        <h3>진단 결과</h3>
+        <ul class="krds-structured-list type-full">
+          <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-success">적합도 72%</span></div><div class="card-body"><div class="c-text"><p class="c-tit"><span class="span">자산매입 후 임대(S&amp;LB)</span></p><p class="c-txt">보유 자산을 캠코가 매입 후 재임대, 유동성을 즉시 확보합니다.</p></div><div class="c-btn"><button type="button" class="krds-btn tertiary small" data-goto="program-snlb">제도 안내</button><a href="#/apply" class="krds-btn secondary small" data-goto="apply" data-prefill="자산매입 후 임대(S&amp;LB)">온라인 신청</a></div></div></div></li>
+          <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-warning">적합도 65%</span></div><div class="card-body"><div class="c-text"><p class="c-tit"><span class="span">회생·워크아웃 기업 지원</span></p><p class="c-txt">보유 매출채권 중 회수 지연 채권 인수, 채권 재조정 등으로 경영정상화를 지원합니다.</p></div><div class="c-btn"><button type="button" class="krds-btn tertiary small" data-goto="program-workout">제도 안내</button><a href="#/apply" class="krds-btn secondary small" data-goto="apply" data-prefill="회생·워크아웃 기업 지원">온라인 신청</a></div></div></div></li>
+        </ul>
+        <button type="button" class="krds-btn tertiary" style="width:fit-content;" id="save-diagnosis">이 결과 마이페이지에 저장</button>
+      </div>
+    </section>
+
+    <!-- 투자자 매칭 지원 -->
+    <section class="screen" data-screen="program-investor-match">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 투자자 매칭 지원</div>
+        <h1>투자자 매칭 지원</h1>
+        <p>투자유치·자산 매각이 필요한 기업을 투자자 라운지에 노출하고, 투자자의 제안과 매칭을 지원합니다.</p>
+      </div>
+      <div class="process-row" style="margin-bottom:2.2rem;">
+        <div class="process-step"><span class="pn">STEP 1</span><h4>매칭 신청</h4><p>기업정보·매칭 희망 조건 등록</p></div>
+        <div class="process-step"><span class="pn">STEP 2</span><h4>프로파일 등록</h4><p>비식별 처리 후 투자자 라운지 노출</p></div>
+        <div class="process-step"><span class="pn">STEP 3</span><h4>투자 제안 접수</h4><p>투자자의 의향서·제안 검토</p></div>
+        <div class="process-step"><span class="pn">STEP 4</span><h4>매칭 성사</h4><p>조건 협의 후 투자 계약 체결</p></div>
+      </div>
+      <div class="grid-2">
+        <div class="box box-pad stack"><h3>지원 대상</h3><p class="body-sm">투자유치 또는 자산 매각을 통해 유동성 확보가 필요한 중소·중견기업</p></div>
+        <div class="box box-pad stack"><h3>지원 내용</h3><p class="body-sm">투자자 라운지 등록, 가상데이터룸(VDR) 개설, 매칭 현황 관리까지 원스톱으로 지원합니다.</p></div>
+      </div>
+      <div class="row" style="margin-top:1.8rem;">
+        <button type="button" class="krds-btn primary" data-goto="apply" data-prefill="투자자 매칭 지원">매칭 신청</button>
+      </div>
+    </section>
+
+    <!-- 자산매입 후 임대(S&LB) -->
+    <section class="screen" data-screen="program-snlb">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 자산매입 후 임대(S&amp;LB)</div>
+        <h1>자산매입 후 임대(Sale &amp; Leaseback) 제도 안내</h1>
+        <p>보유 자산을 캠코가 매입하고, 기업은 이를 임차해 계속 사용하며 즉시 유동성을 확보하는 제도입니다. 매입 방식에 따라 4가지 유형으로 운영됩니다.</p>
+      </div>
+
+      <div class="krds-tab-area layer">
+        <div class="tab line full">
+          <ul role="tablist">
+            <li id="tab_snlb_01" role="tab" aria-selected="true" aria-controls="panel_snlb_01" class="active"><button type="button" class="btn-tab">직접<i class="sr-only created"> 선택됨</i></button></li>
+            <li id="tab_snlb_02" role="tab" aria-selected="false" aria-controls="panel_snlb_02"><button type="button" class="btn-tab">유동화</button></li>
+            <li id="tab_snlb_03" role="tab" aria-selected="false" aria-controls="panel_snlb_03"><button type="button" class="btn-tab">신탁</button></li>
+            <li id="tab_snlb_04" role="tab" aria-selected="false" aria-controls="panel_snlb_04"><button type="button" class="btn-tab">동산</button></li>
+          </ul>
+        </div>
+        <div class="tab-conts-wrap">
+          <section id="panel_snlb_01" aria-labelledby="tab_snlb_01" class="tab-conts active">
+            <h3 class="sr-only">직접 매입 방식</h3>
+            <div class="process-row" style="margin-bottom:2.2rem;">
+              <div class="process-step"><span class="pn">STEP 1</span><h4>사전 상담</h4><p>대상 자산 및 매입가능 여부 검토</p></div>
+              <div class="process-step"><span class="pn">STEP 2</span><h4>자산 실사·감정</h4><p>현장 실사 및 감정평가 진행</p></div>
+              <div class="process-step"><span class="pn">STEP 3</span><h4>매매·임대 계약</h4><p>매입가·임대료 협의 후 계약 체결</p></div>
+              <div class="process-step"><span class="pn">STEP 4</span><h4>매각대금 지급</h4><p>계약 즉시 매각대금 지급, 임차 사용 개시</p></div>
+            </div>
+            <div class="grid-2">
+              <div class="box box-pad stack"><h3>지원 대상 요건</h3><p class="body-sm">일시적 유동성 위기를 겪고 있으나 정상화 가능성이 있는 중소·중견기업으로, 담보 제공이 가능한 자가 부동산·기계설비 보유 기업</p></div>
+              <div class="box box-pad stack"><h3>대상 자산 유형</h3><p class="body-sm">공장·사옥 등 업무용 부동산, 생산에 사용 중인 주요 기계설비를 캠코가 직접 매입 후 재임대 방식으로 계속 사용할 수 있습니다.</p></div>
+            </div>
+          </section>
+          <section id="panel_snlb_02" aria-labelledby="tab_snlb_02" class="tab-conts">
+            <h3 class="sr-only">유동화 매입 방식</h3>
+            <div class="grid-2">
+              <div class="box box-pad stack"><h3>지원 방식</h3><p class="body-sm">유동화전문회사(SPC)를 통해 자산을 매입한 후 재임대하는 방식으로, 자산유동화를 통해 매입 재원을 조달합니다.</p></div>
+              <div class="box box-pad stack"><h3>지원 대상 요건</h3><p class="body-sm">유동화 구조 활용이 가능한 자가 부동산·설비를 보유한 중소·중견기업으로, 정상화 가능성이 있는 기업</p></div>
+            </div>
+          </section>
+          <section id="panel_snlb_03" aria-labelledby="tab_snlb_03" class="tab-conts">
+            <h3 class="sr-only">신탁 매입 방식</h3>
+            <div class="grid-2">
+              <div class="box box-pad stack"><h3>지원 대상</h3><p class="body-sm">「기업 활력 제고를 위한 특별법」에 따라 사업재편계획심의위원회에서 사업재편 계획을 승인받은 기업</p></div>
+              <div class="box box-pad stack"><h3>지원 방식</h3><p class="body-sm">사업재편기업 보유자산을 관리신탁 후 수익권을 캠코에 매각하고, 일정 기간 사용료를 납부하며 계속 사용합니다. 매각대금 상환 시 신탁계약이 해지됩니다.</p></div>
+            </div>
+          </section>
+          <section id="panel_snlb_04" aria-labelledby="tab_snlb_04" class="tab-conts">
+            <h3 class="sr-only">동산 매입 방식</h3>
+            <div class="grid-2">
+              <div class="box box-pad stack"><h3>지원 내용</h3><p class="body-sm">동산담보대출을 이용 중인 기업의 동산담보물(기계·기구)을 매입하여, 기업의 자금조달을 지원하는 프로그램입니다.</p></div>
+              <div class="box box-pad stack"><h3>대상 자산 유형</h3><p class="body-sm">동산담보대출의 담보로 제공된 기계·기구 등 동산 자산</p></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:1.8rem;">
+        <button type="button" class="krds-btn primary" data-goto="program-snlb-assets">대상 자산 조회</button>
+        <button type="button" class="krds-btn tertiary" data-goto="apply" data-prefill="자산매입 후 임대(S&amp;LB)">온라인 신청</button>
+      </div>
+    </section>
+
+    <!-- 자산매입 후 임대(S&LB) 대상 자산 조회 -->
+    <section class="screen" data-screen="program-snlb-assets">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 자산매입 후 임대(S&amp;LB) · 대상 자산 조회</div>
+        <h1>매입 대상 자산 조회</h1>
+        <p>S&amp;LB 매입 검토가 가능한 부동산·설비 조건을 확인하세요. 실제 매입 여부는 실사 후 결정됩니다.</p>
+      </div>
+      <div class="row" style="margin-bottom:1.6rem;">
+        <select class="krds-form-select" aria-label="자산유형 필터"><option>전체 자산유형</option><option>부동산</option><option>기계설비</option></select>
+        <select class="krds-form-select" aria-label="지역 필터"><option>전체 지역</option><option>수도권</option><option>충청권</option><option>영남권</option></select>
+      </div>
+      <ul class="krds-structured-list type-full">
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">매입 검토 가능</span></div><div class="card-body"><div class="c-text"><p class="c-tit"><span class="span">안산 반월공단 공장</span></p><p class="c-txt">공장·부동산 · 경기 안산시 · 대지 660㎡ · 추정가 19~21억</p></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">매입 검토 가능</span></div><div class="card-body"><div class="c-text"><p class="c-tit"><span class="span">CNC 정밀가공 설비 3식</span></p><p class="c-txt">기계설비 · 제조업 · 도입 3년차 · 추정가 4.2억</p></div></div></div></li>
+        <li class="structured-item"><div class="in"><div class="card-top"><span class="krds-badge outline-gray">실사 진행중</span></div><div class="card-body"><div class="c-text"><p class="c-tit"><span class="span">시흥 물류창고</span></p><p class="c-txt">공장·부동산 · 경기 시흥시 · 연면적 1,200㎡ · 추정가 26~28억</p></div></div></div></li>
+      </ul>
+    </section>
+
+    <!-- 선박매입 후 임대 -->
+    <section class="screen" data-screen="program-ship-lb">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 선박매입 후 임대</div>
+        <h1>선박매입 후 임대(Ship Sale &amp; Leaseback) 제도 안내</h1>
+        <p>보유 선박을 캠코가 매입하고, 해운기업은 이를 용선하여 계속 운항하며 즉시 유동성을 확보하는 제도입니다.</p>
+      </div>
+      <div class="process-row" style="margin-bottom:2.2rem;">
+        <div class="process-step"><span class="pn">STEP 1</span><h4>사전 상담</h4><p>대상 선박 및 매입가능 여부 검토</p></div>
+        <div class="process-step"><span class="pn">STEP 2</span><h4>선박 실사·감정</h4><p>현장 실사 및 선가 감정평가 진행</p></div>
+        <div class="process-step"><span class="pn">STEP 3</span><h4>매매·용선 계약</h4><p>매입가·용선료 협의 후 계약 체결</p></div>
+        <div class="process-step"><span class="pn">STEP 4</span><h4>매각대금 지급</h4><p>계약 즉시 매각대금 지급, 용선 사용 개시</p></div>
+      </div>
+      <div class="grid-2">
+        <div class="box box-pad stack"><h3>지원 대상 요건</h3><p class="body-sm">일시적 유동성 위기를 겪고 있으나 정상화 가능성이 있는 해운·수산기업으로, 담보 제공이 가능한 자가 선박을 보유한 기업</p></div>
+        <div class="box box-pad stack"><h3>대상 선박 유형</h3><p class="body-sm">컨테이너선·벌크선 등 상선, 어선 등 운항에 사용 중인 선박 (매입 후 재용선 방식으로 계속 운항 가능)</p></div>
+      </div>
+      <div class="row" style="margin-top:1.8rem;">
+        <button type="button" class="krds-btn primary" data-goto="apply" data-prefill="선박매입 후 임대">온라인 신청</button>
+      </div>
+    </section>
+
+    <!-- 회생·워크아웃 기업 지원 -->
+    <section class="screen" data-screen="program-workout">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 회생·워크아웃 기업 지원</div>
+        <h1>회생·워크아웃 기업 경영정상화 지원</h1>
+        <p>회생·워크아웃 절차 중이거나 채권 부담으로 어려움을 겪는 기업을 위해, 부실채권 인수와 채권 재조정으로 경영정상화를 지원합니다.</p>
+      </div>
+      <div class="grid-2">
+        <div class="box box-pad stack"><h3>지원 대상 요건</h3><p class="body-sm">3개월 이상 회수 지연된 매출채권을 보유했거나 회생·워크아웃 절차가 진행 중인 기업, 채무자의 회생 가능성이 있는 경우 우선 검토</p></div>
+        <div class="box box-pad stack"><h3>지원 프로그램 구성</h3><p class="body-sm">부실채권(NPL) 인수, 채무상환 유예 및 분할상환 조정 등을 통해 채권 부담 없이 경영정상화에 집중할 수 있도록 지원 (채권 실사 → 인수·조정가 산정 → 계약 → 대금 지급, 평균 4~6주 소요)</p></div>
+      </div>
+      <div class="row" style="margin-top:1.8rem;">
+        <button type="button" class="krds-btn primary" data-goto="apply" data-prefill="회생·워크아웃 기업 지원">온라인 신청</button>
+        <button type="button" class="krds-btn tertiary" data-goto="program-workout-restructure">채권 재조정 시뮬레이터 보기</button>
+      </div>
+    </section>
+
+    <!-- 채권 재조정 시뮬레이터 -->
+    <section class="screen" data-screen="program-workout-restructure">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 회생·워크아웃 기업 지원 · 채권 재조정 시뮬레이터</div>
+        <h1>채무상환 유예 및 분할상환 시뮬레이터</h1>
+        <p>희망하는 유예기간과 분할상환 방식을 입력하면 조정 후 예상 월 상환액을 계산해드립니다. 실제 조건은 심사 결과에 따라 달라질 수 있습니다.</p>
+      </div>
+      <div class="grid-2" style="max-width:82rem;">
+        <div class="box box-pad stack">
+          <div class="fieldset">
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="debt-principal">채권 원금(억 원)</label></div><div class="form-conts"><input type="number" id="debt-principal" class="krds-input" value="8" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="debt-rate">현재 적용 이자율(연 %)</label></div><div class="form-conts"><input type="number" id="debt-rate" class="krds-input" value="6.5" step="0.1" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="debt-grace">희망 상환유예기간</label></div><div class="form-conts"><select id="debt-grace" class="krds-form-select" style="width:100%;"><option value="6">6개월</option><option value="12">12개월</option><option value="24">24개월</option></select></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="debt-method">분할상환 방식</label></div><div class="form-conts"><select id="debt-method" class="krds-form-select" style="width:100%;"><option>원리금균등분할</option><option>거치 후 원금균등분할</option></select></div></div>
+          </div>
+          <button type="button" class="krds-btn primary" id="run-debt-calc" style="width:fit-content;">조정 결과 계산</button>
+        </div>
+        <div class="box box-pad stack" id="debt-result" style="display:none;">
+          <span class="caption">조정 후 예상 월 상환액(추정치)</span>
+          <div class="num" style="font-size:2.6rem;font-weight:800;color:var(--ci-blue-2);" id="debt-monthly">-</div>
+          <div style="border-top:1px solid var(--krds-light-color-border-default);margin-top:.6rem;padding-top:1rem;font-size:1.25rem;color:var(--krds-light-color-text-subtle);line-height:1.7;">
+            유예기간 중에는 이자만 납부하며, 유예 종료 후 잔여기간 동안 원리금을 균등 분할 상환합니다. 정확한 조건은 채권 재조정 심사에서 확정됩니다.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 펀드 출·투자 -->
+    <section class="screen" data-screen="program-fund">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 펀드 출·투자(기업지원펀드)</div>
+        <h1>펀드 출·투자(기업지원펀드)</h1>
+        <p>채권은행 중심 구조조정의 한계를 극복하고 민간 자본시장 중심의 상시 구조조정을 활성화하기 위해, 캠코가 구조조정 펀드의 투자자(LP)로 참여하여 자금을 지원합니다.</p>
+      </div>
+      <div class="box box-pad" style="margin-bottom:1.8rem;">
+        <div class="flow-diagram">
+          <div class="flow-node">캠코<br/><span style="font-weight:400;font-size:1.1rem;">(출자자·LP)</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">펀드 운용사<br/><span style="font-weight:400;font-size:1.1rem;">(민간 GP)</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">대상 기업<br/><span style="font-weight:400;font-size:1.1rem;">(투자 집행)</span></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="box box-pad stack"><h3>지원 배경</h3><p class="body-sm">채권은행 중심 구조조정의 한계를 극복하고 보다 효율적인 민간 중심 구조조정의 필요성이 커짐에 따라, 상대적으로 부족한 구조조정 펀드 투자자(LP) 역할을 캠코가 수행합니다.</p></div>
+        <div class="box box-pad stack"><h3>자금 지원 프로세스</h3><p class="body-sm">투자 제안 접수 → 운용사 실사 → 투자심의위원회 심의 → 투자 집행 (공고를 통해 접수 일정을 확인하세요)</p></div>
+      </div>
+      <div class="row" style="margin-top:1.6rem;">
+        <button type="button" class="krds-btn primary" data-goto="apply" data-prefill="펀드 출·투자(기업지원펀드)">온라인 신청</button>
+        <button type="button" class="krds-btn tertiary" data-goto="board-notice">관련 공고 바로가기</button>
+      </div>
+    </section>
+
+    <!-- 기업구조혁신펀드 운용 -->
+    <section class="screen" data-screen="program-fund-restructure">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 기업구조혁신펀드 운용</div>
+        <h1>기업구조혁신펀드</h1>
+        <p>시장 중심의 기업구조조정 활성화 및 기업 부실 대응을 위한 구조조정 투자 목적의 정책펀드로, 재간접펀드(Fund of Funds) 구조로 조성·운용됩니다.</p>
+      </div>
+      <div class="box box-pad" style="margin-bottom:1.8rem;">
+        <div class="flow-diagram">
+          <div class="flow-node">캠코<br/><span style="font-weight:400;font-size:1.1rem;">(모펀드 출자)</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">위탁 운용사<br/><span style="font-weight:400;font-size:1.1rem;">(자펀드 GP)</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">구조조정 대상기업</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="box box-pad stack"><h3>운용 구조</h3><p class="body-sm">재간접펀드(Funds of Funds) 구조로 운용되며, 공사 홈페이지 공지사항을 통해 위탁운용사 선정 계획을 공고합니다.</p></div>
+        <div class="box box-pad stack"><h3>참여 방법</h3><p class="body-sm">기업구조혁신펀드 위탁운용사 선정 계획 공고를 확인하고 절차에 따라 참여할 수 있습니다.</p></div>
+      </div>
+      <div class="row" style="margin-top:1.6rem;">
+        <button type="button" class="krds-btn primary" data-goto="apply" data-prefill="기업구조혁신펀드 운용">온라인 신청</button>
+        <button type="button" class="krds-btn tertiary" data-goto="board-notice">위탁운용사 선정 공고 보기</button>
+      </div>
+    </section>
+
+    <!-- PF사업장 정상화 지원펀드 -->
+    <section class="screen" data-screen="program-fund-pf">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · PF사업장 정상화 지원펀드</div>
+        <h1>PF사업장 정상화 지원펀드</h1>
+        <p>부동산 PF발 금융리스크에 선제적으로 대응하기 위해 캠코를 중심으로 펀드를 조성하여, 부실·부실우려 PF사업장의 정상화를 지원합니다.</p>
+      </div>
+      <div class="box box-pad" style="margin-bottom:1.8rem;">
+        <div class="flow-diagram">
+          <div class="flow-node">캠코<br/><span style="font-weight:400;font-size:1.1rem;">(앵커 투자자·LP)</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">민간 운용사<br/><span style="font-weight:400;font-size:1.1rem;">(블라인드펀드 GP)</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">부실·부실우려 PF사업장</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="box box-pad stack"><h3>지원 대상</h3><p class="body-sm">브릿지론 또는 착공 전 PF 단계의 부실·부실우려 사업장 — (부실) 금융비용이 변제되지 않는 경우, (부실우려) 본 PF 전환 곤란 등으로 향후 계속 사업이 어려울 것으로 예상되는 경우</p></div>
+        <div class="box box-pad stack"><h3>투자 구조</h3><p class="body-sm">캠코가 앵커 투자자(LP)로서 공모를 통해 운용사를 선정하고, 민간 운용사(GP)가 블라인드 펀드를 조성하여 PF사업장 정상화를 추진합니다.</p></div>
+      </div>
+      <div class="row" style="margin-top:1.6rem;">
+        <button type="button" class="krds-btn primary" data-goto="apply" data-prefill="PF사업장 정상화 지원펀드">온라인 신청</button>
+      </div>
+    </section>
+
+    <!-- 담보부사채 발행지원 -->
+    <section class="screen" data-screen="program-bond">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 담보부사채 발행지원</div>
+        <h1>담보부사채 발행지원</h1>
+        <p>중견·중소기업이 담보부사채를 발행해 자금을 조달할 수 있도록 캠코가 담보신탁 구조를 통해 신용보강을 지원합니다.</p>
+      </div>
+      <div class="grid-2">
+        <div class="box box-pad stack"><h3>지원 대상 요건</h3><p class="body-sm">회사채 직접 발행이 어려운 중소·중견기업으로, 담보 제공이 가능한 부동산·설비 등 자산을 보유한 기업</p></div>
+        <div class="box box-pad stack"><h3>지원 방식</h3><p class="body-sm">보유 자산을 담보신탁하여 신용을 보강하고, 이를 기초로 담보부사채를 발행하여 시중금리보다 유리한 조건으로 자금을 조달합니다.</p></div>
+      </div>
+      <div class="row" style="margin-top:1.8rem;">
+        <button type="button" class="krds-btn primary" data-goto="apply" data-prefill="담보부사채 발행지원">온라인 신청</button>
+      </div>
+    </section>
+
+    <!-- 유관기관 지원정책 안내 -->
+    <section class="screen" data-screen="program-partner-policy">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 유관기관 지원정책 안내</div>
+        <h1>유관기관 지원정책 안내</h1>
+        <p>캠코 지원제도와 함께 활용할 수 있는 유관기관의 기업지원 정책을 확인하세요.</p>
+      </div>
+      <div class="krds-table-wrap">
+        <table class="tbl col data">
+          <caption>유관기관 지원정책 목록, 기관명·지원 제도·분야로 구성</caption>
+          <colgroup><col><col><col style="width:12rem;"><col style="width:9rem;"></colgroup>
+          <thead><tr><th scope="col">기관명</th><th scope="col">지원 제도</th><th scope="col">분야</th><th scope="col"></th></tr></thead>
+          <tbody>
+            <tr><td>중소벤처기업진흥공단</td><td>구조개선 전용자금, 사업전환 지원사업 등 정책자금 융자 지원</td><td><span class="krds-badge outline-gray">자금</span></td><td><button type="button" class="krds-btn tertiary small">바로가기</button></td></tr>
+            <tr><td>신용보증기금</td><td>신용보증 지원</td><td><span class="krds-badge outline-gray">보증</span></td><td><button type="button" class="krds-btn tertiary small">바로가기</button></td></tr>
+            <tr><td>기술보증기금</td><td>기술평가 기반 보증 지원</td><td><span class="krds-badge outline-gray">보증</span></td><td><button type="button" class="krds-btn tertiary small">바로가기</button></td></tr>
+            <tr><td>서울회생법원</td><td>법정관리(회생·파산) 절차 안내</td><td><span class="krds-badge outline-gray">회생</span></td><td><button type="button" class="krds-btn tertiary small">바로가기</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 온라인 신청 4단계 -->
+    <section class="screen" data-screen="apply">
+      <div class="screen-head">
+        <div class="eyebrow">기업지원 프로그램 · 온라인 신청 <span class="krds-badge bg-light-information">WEB 권장</span></div>
+        <h1>온라인 신청</h1>
+        <p id="apply-prefill-note" style="display:none;"></p>
+      </div>
+
+      <ol class="krds-step-wrap" id="stepper"></ol>
+
+      <div class="box box-pad" style="max-width:64rem;">
+        <div id="step-1">
+          <h3 style="margin-bottom:.4rem;">Step 1 · 기업 정보 입력</h3>
+          <p class="caption" style="margin-bottom:1.4rem;">상단 진행 인디케이터가 항상 노출됩니다.</p>
+          <div class="fieldset">
+            <div class="form-col-group" style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;">
+              <div class="form-group" style="width:100%;"><div class="form-tit"><label for="apply-name">상호</label></div><div class="form-conts"><input type="text" id="apply-name" class="krds-input" value="㈜한빛정밀" /></div></div>
+              <div class="form-group" style="width:100%;"><div class="form-tit"><label for="apply-brn">사업자등록번호</label></div><div class="form-conts"><input type="text" id="apply-brn" class="krds-input num" value="214-81-XXXXX" /></div></div>
+              <div class="form-group" style="width:100%;"><div class="form-tit"><label for="apply-ceo">대표자명</label></div><div class="form-conts"><input type="text" id="apply-ceo" class="krds-input" value="박정호" /></div></div>
+              <div class="form-group" style="width:100%;"><div class="form-tit"><label for="apply-phone">담당자 연락처</label></div><div class="form-conts"><input type="text" id="apply-phone" class="krds-input" value="010-XXXX-4821" /></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="step-2" style="display:none;">
+          <h3 style="margin-bottom:1.4rem;">Step 2 · 프로그램 선택</h3>
+          <div class="fieldset">
+            <div class="form-group" style="width:100%;">
+              <div class="form-tit"><label for="program-select">신청 프로그램</label></div>
+              <div class="form-conts">
+                <select id="program-select" class="krds-form-select" style="width:100%;">
+                  <option>자산매입 후 임대(S&amp;LB)</option>
+                  <option>선박매입 후 임대</option>
+                  <option>회생·워크아웃 기업 지원</option>
+                  <option>펀드 출·투자(기업지원펀드)</option>
+                  <option>기업구조혁신펀드 운용</option>
+                  <option>PF사업장 정상화 지원펀드</option>
+                  <option>담보부사채 발행지원</option>
+                  <option>투자자 매칭 지원</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="width:100%;">
+              <div class="form-tit"><label for="apply-type">신청 구분</label></div>
+              <div class="form-conts"><select id="apply-type" class="krds-form-select" style="width:100%;"><option>신규 신청</option><option>재신청</option></select></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="step-3" style="display:none;">
+          <h3 style="margin-bottom:.4rem;">Step 3 · 서류 첨부</h3>
+          <p class="caption" style="margin-bottom:1.4rem;">PDF·JPG·PNG, 파일당 최대 10MB. 필수 서류를 모두 첨부해야 다음 단계로 진행할 수 있습니다.</p>
+          <div class="krds-file-upload line">
+            <div class="file-list">
+              <ul class="upload-list">
+                <li class="doc-item" data-required="true" data-uploaded="true">
+                  <div class="file-info">
+                    <div class="file-name">사업자등록증 <span class="doc-req">필수</span> <span class="caption">PDF·JPG·PNG · 최대 10MB</span></div>
+                    <div class="btn-wrap"><button type="button" class="krds-btn small doc-toggle-btn">첨부완료</button></div>
+                  </div>
+                </li>
+                <li class="doc-item" data-required="true" data-uploaded="false">
+                  <div class="file-info">
+                    <div class="file-name">최근 3개년 재무제표 <span class="doc-req">필수</span> <span class="caption">PDF · 최대 10MB</span></div>
+                    <div class="btn-wrap"><button type="button" class="krds-btn small tertiary doc-toggle-btn">첨부하기</button></div>
+                  </div>
+                </li>
+                <li class="doc-item" data-required="true" data-uploaded="false">
+                  <div class="file-info">
+                    <div class="file-name">자산·채권 명세서 <span class="doc-req">필수</span> <span class="caption">PDF·JPG·PNG · 최대 10MB</span></div>
+                    <div class="btn-wrap"><button type="button" class="krds-btn small tertiary doc-toggle-btn">첨부하기</button></div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div id="step-4" style="display:none;">
+          <h3 style="margin-bottom:1.4rem;">Step 4 · 최종 확인 및 제출</h3>
+          <div class="stack" style="font-size:1.3rem;">
+            <div class="row" style="justify-content:space-between;"><span class="caption">신청 프로그램</span><b id="confirm-program">자산매입 후 임대(S&amp;LB)</b></div>
+            <div class="row" style="justify-content:space-between;"><span class="caption">상호</span><b>㈜한빛정밀</b></div>
+            <div class="row" style="justify-content:space-between;"><span class="caption">첨부 서류</span><b>3/3건 완료</b></div>
+          </div>
+        </div>
+
+        <div id="step-done" style="display:none;text-align:center;padding:1.6rem 0;">
+          <span class="krds-badge bg-light-success">제출 완료</span>
+          <h3 style="margin-top:1.2rem;font-size:1.7rem;">접수번호 <span class="num">KAMCO-2026-04231</span></h3>
+          <p class="caption" style="margin-top:.6rem;">임시저장 데이터가 최종 전송되었으며, 카카오톡으로 접수 알림이 발송됩니다.</p>
+          <button type="button" class="krds-btn primary" style="margin-top:1.4rem;" data-goto="mypage-status">신청 현황 조회로 이동</button>
+        </div>
+
+        <div class="row" id="apply-nav" style="justify-content:space-between;margin-top:2.2rem;border-top:1px solid var(--krds-light-color-border-default);padding-top:1.6rem;">
+          <button type="button" class="krds-btn tertiary small" id="btn-save-draft">임시저장</button>
+          <div class="row">
+            <button type="button" class="krds-btn tertiary small" id="btn-prev" style="visibility:hidden;">이전 단계</button>
+            <button type="button" class="krds-btn primary small" id="btn-next">다음 단계</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 신청 및 진행 현황 -->
+    <section class="screen" data-screen="mypage-status">
+      <div class="screen-head">
+        <div class="eyebrow">마이페이지 · 신청 및 진행 현황</div>
+        <h1>신청·보완 현황 조회</h1>
+        <p>실시간 5단계 트래커로 진행 상황을 확인하고, 반려·보완 요청 건은 서류를 즉시 재첨부할 수 있습니다.</p>
+      </div>
+
+      <div class="app-row">
+        <div class="app-row-top">
+          <div>
+            <div class="row"><b>자산매입 후 임대(S&amp;LB)</b><span class="krds-badge bg-light-warning" id="app1-badge">서류심사중 · 보완요청</span></div>
+            <span class="caption">접수번호 <span class="num">KAMCO-2026-04198</span> · 2026-07-18 접수</span>
+          </div>
+          <button type="button" class="krds-btn secondary small" id="toggle-supplement">보완 서류 제출</button>
+        </div>
+        <ol class="krds-step-wrap mini-step-wrap">
+          <li class="done"><span><i class="step">1</i><span class="step-tit">접수대기</span></span></li>
+          <li class="active"><span><em class="sr-only">현재단계</em><i class="step">2</i><span class="step-tit">서류심사중</span></span></li>
+          <li><span><i class="step">3</i><span class="step-tit">현장실사/평가</span></span></li>
+          <li><span><i class="step">4</i><span class="step-tit">최종승인</span></span></li>
+          <li><span><i class="step">5</i><span class="step-tit">지원완료/약정체결</span></span></li>
+        </ol>
+        <div class="expand-panel" id="supplement-panel" style="display:none;">
+          <span style="font-size:1.25rem;">요청 항목: 최근 3개년 재무제표 원본</span>
+          <button type="button" class="krds-btn primary small" id="supplement-upload-btn">파일 업로드</button>
+        </div>
+      </div>
+
+      <div class="app-row" style="margin-top:1.2rem;">
+        <div class="app-row-top">
+          <div>
+            <div class="row"><b>회생·워크아웃 기업 지원</b><span class="krds-badge outline-gray">현장실사/평가</span></div>
+            <span class="caption">접수번호 <span class="num">KAMCO-2026-04231</span> · 2026-07-22 접수</span>
+          </div>
+          <button type="button" class="krds-btn tertiary small">상세보기</button>
+        </div>
+        <ol class="krds-step-wrap mini-step-wrap">
+          <li class="done"><span><i class="step">1</i><span class="step-tit">접수대기</span></span></li>
+          <li class="done"><span><i class="step">2</i><span class="step-tit">서류심사중</span></span></li>
+          <li class="active"><span><em class="sr-only">현재단계</em><i class="step">3</i><span class="step-tit">현장실사/평가</span></span></li>
+          <li><span><i class="step">4</i><span class="step-tit">최종승인</span></span></li>
+          <li><span><i class="step">5</i><span class="step-tit">지원완료/약정체결</span></span></li>
+        </ol>
+      </div>
+
+      <div class="row" style="margin-top:1.8rem;justify-content:space-between;">
+        <button type="button" class="krds-btn tertiary small" data-goto="mypage-docs">제출 서류/보완 관리로 이동</button>
+        <button type="button" class="krds-btn tertiary small" data-goto="apply-cert">증명서 발급</button>
+      </div>
+    </section>
+
+    <!-- 증명서 발급 서비스 -->
+    <section class="screen" data-screen="apply-cert">
+      <div class="screen-head">
+        <div class="eyebrow">마이페이지 · 신청 및 진행 현황 · 증명서 발급 서비스 <span class="krds-badge bg-light-information">WEB 전용 · 프린트 드라이버</span></div>
+        <h1>증명서 발급 서비스</h1>
+        <p>승인 완료된 신청 건에 대해 지원 확인서, 약정서 등을 국문/영문 PDF로 발급받을 수 있습니다.</p>
+      </div>
+      <span class="krds-badge bg-light-danger" style="margin-bottom:1.6rem;">보안 뷰어를 통해서만 열람할 수 있습니다</span>
+      <div class="stack" style="max-width:64rem;margin-top:1rem;">
+        <div class="app-row">
+          <div class="app-row-top">
+            <div>
+              <b>지원사업 선정 확인서</b>
+              <div class="caption" style="margin-top:.2rem;">자산매입 후 임대(S&amp;LB) · 발급번호 <span class="num">CERT-2026-1187</span></div>
+            </div>
+            <div class="row">
+              <select class="krds-form-select" aria-label="지원사업 선정 확인서 발급 언어"><option>국문</option><option>영문</option></select>
+              <button type="button" class="krds-btn primary small">PDF 다운로드</button>
+            </div>
+          </div>
+        </div>
+        <div class="app-row">
+          <div class="app-row-top">
+            <div>
+              <b>자산매입 약정서</b>
+              <div class="caption" style="margin-top:.2rem;">자산매입 후 임대(S&amp;LB) · 발급번호 <span class="num">CERT-2026-1188</span></div>
+            </div>
+            <div class="row">
+              <select class="krds-form-select" aria-label="자산매입 약정서 발급 언어"><option>국문</option><option>영문</option></select>
+              <button type="button" class="krds-btn primary small">PDF 다운로드</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제출 서류/보완 관리 -->
+    <section class="screen" data-screen="mypage-docs">
+      <div class="screen-head">
+        <div class="eyebrow">마이페이지 · 제출 서류/보완 관리</div>
+        <h1>제출 서류/보완 관리</h1>
+        <p>신청 건별로 제출한 서류 현황과 보완 요청 여부를 확인하고, 필요한 서류를 즉시 재첨부할 수 있습니다.</p>
+      </div>
+      <div class="krds-table-wrap">
+        <table class="tbl col data">
+          <caption>제출 서류 현황, 최신 신청 건 순</caption>
+          <colgroup><col><col><col style="width:11rem;"><col style="width:11rem;"><col style="width:9rem;"></colgroup>
+          <thead><tr><th scope="col">서류명</th><th scope="col">신청 건</th><th scope="col">제출일</th><th scope="col">상태</th><th scope="col"></th></tr></thead>
+          <tbody>
+            <tr><td>사업자등록증</td><td>자산매입 후 임대(S&amp;LB)</td><td class="num">2026-07-18</td><td><span class="krds-badge bg-light-success">정상</span></td><td></td></tr>
+            <tr><td>최근 3개년 재무제표</td><td>자산매입 후 임대(S&amp;LB)</td><td class="num">2026-07-18</td><td><span class="krds-badge bg-light-warning">보완요청</span></td><td><button type="button" class="krds-btn tertiary small">재첨부</button></td></tr>
+            <tr><td>자산·채권 명세서</td><td>회생·워크아웃 기업 지원</td><td class="num">2026-07-22</td><td><span class="krds-badge bg-light-success">정상</span></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 회원정보 및 권한 관리 -->
+    <section class="screen" data-screen="mypage-account">
+      <div class="screen-head">
+        <div class="eyebrow">마이페이지 · 회원정보 및 권한 관리</div>
+        <h1>회원정보 및 권한 관리</h1>
+        <p>기업 정보와 담당자 권한을 관리합니다. 권한 변경은 기업정보관리자만 수행할 수 있습니다.</p>
+      </div>
+      <div class="grid-2">
+        <div class="box box-pad stack">
+          <h3>기업 정보</h3>
+          <div class="fieldset">
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="acct-name">상호</label></div><div class="form-conts"><input type="text" id="acct-name" class="krds-input" value="㈜한빛정밀" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="acct-ceo">대표자명</label></div><div class="form-conts"><input type="text" id="acct-ceo" class="krds-input" value="박정호" /></div></div>
+            <div class="form-group" style="width:100%;"><div class="form-tit"><label for="acct-phone">담당자 연락처</label></div><div class="form-conts"><input type="text" id="acct-phone" class="krds-input" value="010-XXXX-4821" /></div></div>
+          </div>
+          <button type="button" class="krds-btn primary small" style="width:fit-content;" id="account-save">저장</button>
+        </div>
+        <div class="box box-pad stack">
+          <h3>담당자 권한</h3>
+          <div class="row" style="justify-content:space-between;"><span class="body-sm">이수민 · 재무담당</span><span class="krds-badge bg-light-primary">기업정보관리자</span></div>
+          <div class="row" style="justify-content:space-between;"><span class="body-sm">박정호 · 대표자</span><span class="krds-badge outline-gray">열람전용</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 매칭대상 기업정보 조회 -->
+    <section class="screen" data-screen="investor-companies">
+      <div class="screen-head">
+        <div class="eyebrow">투자자 라운지 · 매칭대상 기업정보 조회</div>
+        <h1>투자유치 희망기업 조회</h1>
+        <p>자산 매각 또는 투자 유치를 희망하는 중소기업 목록입니다. 기업 상세는 비식별 처리되어 제공됩니다.</p>
+      </div>
+      <div class="row" style="margin-bottom:1.6rem;">
+        <select class="krds-form-select" id="investor-filter-industry" aria-label="업종 필터"><option value="">전체 업종</option><option>제조업</option><option>물류업</option><option>서비스업</option></select>
+        <select class="krds-form-select" id="investor-filter-region" aria-label="지역 필터"><option value="">전체 지역</option><option>경기권</option><option>충청권</option><option>영남권</option></select>
+      </div>
+      <ul class="krds-structured-list type-full" id="investor-company-list">
+        <li class="structured-item" data-industry="제조업" data-region="경기권"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">매각검토중</span></div><div class="card-body"><div class="c-text"><p class="c-tit"><span class="span">정밀가공 전문기업 A사</span></p><p class="c-txt">제조업 · 매출 80~100억 · 경기권</p></div></div></div></li>
+        <li class="structured-item" data-industry="물류업" data-region="충청권"><div class="in"><div class="card-top"><span class="krds-badge bg-light-primary">투자유치중</span></div><div class="card-body"><div class="c-text"><p class="c-tit"><span class="span">냉동물류 전문기업 B사</span></p><p class="c-txt">물류업 · 매출 150~200억 · 충청권</p></div></div></div></li>
+        <li class="structured-item" data-industry="서비스업" data-region="영남권"><div class="in"><div class="card-top"><span class="krds-badge outline-gray">검토완료</span></div><div class="card-body"><div class="c-text"><p class="c-tit"><span class="span">산업설비 유지보수 C사</span></p><p class="c-txt">서비스업 · 매출 40~60억 · 영남권</p></div></div></div></li>
+      </ul>
+      <p class="caption" id="investor-filter-empty" style="display:none;margin-top:.6rem;">조건에 맞는 기업이 없습니다.</p>
+      <div class="row" style="margin-top:1.6rem;">
+        <button type="button" class="krds-btn tertiary" data-goto="investor-proposal">투자제안 및 의향서 제출</button>
+        <button type="button" class="krds-btn tertiary" data-goto="vdr-detail">가상데이터룸 상세 조회</button>
+        <button type="button" class="krds-btn tertiary" data-goto="investor-matching">매칭 관리로 이동</button>
+      </div>
+    </section>
+
+    <!-- 투자제안 및 의향서 제출 -->
+    <section class="screen" data-screen="investor-proposal">
+      <div class="screen-head">
+        <div class="eyebrow">투자자 라운지 · 투자제안 및 의향서 제출</div>
+        <h1>투자제안 및 의향서 제출</h1>
+        <p>매칭 대상 기업에 투자 의향서(LOI)를 제출합니다. 제출 후 대상 기업의 검토를 거쳐 매칭 진행 여부가 안내됩니다.</p>
+      </div>
+      <div class="box box-pad stack" style="max-width:56rem;">
+        <div class="fieldset">
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="proposal-target">대상 기업</label></div><div class="form-conts"><select id="proposal-target" class="krds-form-select" style="width:100%;"><option>정밀가공 전문기업 A사</option><option>냉동물류 전문기업 B사</option><option>산업설비 유지보수 C사</option></select></div></div>
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="proposal-type">제안 유형</label></div><div class="form-conts"><select id="proposal-type" class="krds-form-select" style="width:100%;"><option>지분투자</option><option>전환사채(CB)</option><option>자산 인수</option></select></div></div>
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="proposal-amount">제안 금액(억 원)</label></div><div class="form-conts"><input type="number" id="proposal-amount" class="krds-input" value="50" /></div></div>
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="proposal-content">제안 내용</label></div><div class="form-conts"><input type="text" id="proposal-content" class="krds-input" value="지분투자를 통한 경영정상화 지원 의향" /></div></div>
+        </div>
+        <button type="button" class="krds-btn primary" id="proposal-submit" style="width:fit-content;">의향서 제출</button>
+        <span id="proposal-status" class="caption"></span>
+      </div>
+    </section>
+
+    <!-- 매칭 관리 -->
+    <section class="screen" data-screen="investor-matching">
+      <div class="screen-head">
+        <div class="eyebrow">투자자 라운지 · 매칭 관리</div>
+        <h1>매칭 관리</h1>
+        <p>제출한 투자 의향서와 VDR 접근 요청의 진행 현황을 확인합니다.</p>
+      </div>
+
+      <h3 style="margin-bottom:1rem;">투자 의향서 제출 이력</h3>
+      <div class="krds-table-wrap" style="margin-bottom:2.4rem;">
+        <table class="tbl col data">
+          <caption>투자 의향서 제출 이력, 최신 제출 건 순</caption>
+          <colgroup><col><col style="width:12rem;"><col style="width:10rem;"><col style="width:11rem;"><col style="width:10rem;"></colgroup>
+          <thead><tr><th scope="col">대상 기업</th><th scope="col">제안 유형</th><th scope="col">제안 금액</th><th scope="col">제출일</th><th scope="col">상태</th></tr></thead>
+          <tbody id="matching-table-body"></tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-bottom:1rem;">VDR 접근 요청 현황</h3>
+      <div class="krds-table-wrap">
+        <table class="tbl col data">
+          <caption>VDR 접근 요청 현황, 최신 요청 건 순</caption>
+          <colgroup><col><col style="width:14rem;"><col style="width:11rem;"><col style="width:10rem;"></colgroup>
+          <thead><tr><th scope="col">대상 기업</th><th scope="col">투자자 구분</th><th scope="col">요청일</th><th scope="col">상태</th></tr></thead>
+          <tbody id="vdr-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 국유증권 매각 대상기업 상세 조회 -->
+    <section class="screen" data-screen="vdr-detail">
+      <div class="screen-head">
+        <div class="eyebrow">국유증권 가상데이터룸 · 국유증권 매각 대상기업 상세 조회 <span class="krds-badge bg-light-information">WEB 전용 · 강력한 보안</span></div>
+        <h1>국유증권 가상데이터룸(VDR)</h1>
+        <p>매각 대상기업의 상세 실사 자료 열람을 위한 접근 권한을 신청합니다. 계정 권한별로 열람 범위가 제어됩니다.</p>
+      </div>
+      <div class="box box-pad" style="max-width:56rem;margin-bottom:1.6rem;">
+        <div class="grid-3">
+          <div class="stat"><span class="n num">80~100억</span><span class="l">정밀가공 전문기업 A사 매출</span></div>
+          <div class="stat"><span class="n num">경기권</span><span class="l">소재 지역</span></div>
+          <div class="stat"><span class="n num">매각검토중</span><span class="l">현재 상태</span></div>
+        </div>
+      </div>
+      <div class="box box-pad stack" style="max-width:56rem;">
+        <div class="fieldset">
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="vdr-target">대상 기업</label></div><div class="form-conts"><select id="vdr-target" class="krds-form-select" style="width:100%;"><option>정밀가공 전문기업 A사</option><option>냉동물류 전문기업 B사</option></select></div></div>
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="vdr-investor-type">투자자 구분</label></div><div class="form-conts"><select id="vdr-investor-type" class="krds-form-select" style="width:100%;"><option>기관투자자</option><option>전략적투자자(SI)</option><option>재무적투자자(FI)</option></select></div></div>
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="vdr-amount">투자 검토 규모(억 원)</label></div><div class="form-conts"><input type="number" id="vdr-amount" class="krds-input" value="50" /></div></div>
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="vdr-reason">신청 사유</label></div><div class="form-conts"><input type="text" id="vdr-reason" class="krds-input" value="자산 인수 실사를 위한 재무·법무 자료 열람" /></div></div>
+        </div>
+        <button type="button" class="krds-btn primary" id="vdr-request" style="width:fit-content;">VDR 접근 권한 신청</button>
+        <span id="vdr-status" class="caption"></span>
+      </div>
+    </section>
+
+    <!-- 관리자 대시보드 -->
+    <section class="screen" data-screen="admin-dashboard">
+      <div class="screen-head">
+        <div class="eyebrow">캠코 관리자 · 관리자 대시보드</div>
+        <h1>관리자 대시보드</h1>
+        <p>접수된 신청 건의 심사 현황을 한눈에 확인하고 처리할 수 있습니다.</p>
+      </div>
+      <div class="grid-3" style="margin-bottom:2.2rem;">
+        <div class="box box-pad stat"><span class="n num" id="stat-pending">-</span><span class="l">심사·실사 진행중</span></div>
+        <div class="box box-pad stat"><span class="n num" id="stat-supplement">-</span><span class="l">보완 요청중</span></div>
+        <div class="box box-pad stat"><span class="n num" id="stat-approved">-</span><span class="l">최종 승인</span></div>
+      </div>
+      <div class="row">
+        <button type="button" class="krds-btn primary" data-goto="admin-applications">신청 접수 목록 보기</button>
+      </div>
+    </section>
+
+    <!-- 신청 접수 목록 -->
+    <section class="screen" data-screen="admin-applications">
+      <div class="screen-head">
+        <div class="eyebrow">캠코 관리자 · 신청 접수 목록</div>
+        <h1>신청 접수 목록</h1>
+        <p>접수된 전체 신청 건을 상태별로 조회하고 심사 상세로 이동할 수 있습니다.</p>
+      </div>
+      <div class="row" style="margin-bottom:1.6rem;">
+        <select class="krds-form-select" id="admin-filter-status" aria-label="심사 상태 필터">
+          <option value="">전체 상태</option>
+          <option>서류심사중</option>
+          <option>현장실사/평가</option>
+          <option>최종승인</option>
+          <option>반려</option>
+        </select>
+      </div>
+      <div class="krds-table-wrap">
+        <table class="tbl col data">
+          <caption>신청 접수 목록, 최신 접수 건 순</caption>
+          <colgroup><col style="width:15rem;"><col><col style="width:12rem;"><col style="width:11rem;"><col style="width:11rem;"><col style="width:9rem;"></colgroup>
+          <thead><tr><th scope="col">접수번호</th><th scope="col">신청 프로그램</th><th scope="col">상호</th><th scope="col">접수일</th><th scope="col">상태</th><th scope="col"></th></tr></thead>
+          <tbody id="admin-app-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 신청 심사 상세 -->
+    <section class="screen" data-screen="admin-review">
+      <div class="screen-head">
+        <div class="eyebrow">캠코 관리자 · 신청 심사 상세</div>
+        <h1>신청 심사 상세</h1>
+        <p>서류를 검토한 뒤 보완 요청, 승인, 반려 중 하나를 처리합니다.</p>
+      </div>
+
+      <div class="box box-pad stack" style="max-width:72rem;margin-bottom:1.6rem;">
+        <div class="row"><b id="admin-review-program"></b><span class="krds-badge" id="admin-review-badge"></span></div>
+        <span class="caption">접수번호 <span class="num" id="admin-review-id"></span> · <span id="admin-review-date"></span> 접수</span>
+        <div class="grid-2" style="margin-top:.6rem;">
+          <div><span class="caption">상호</span><div id="admin-review-company"></div></div>
+          <div><span class="caption">사업자등록번호</span><div class="num" id="admin-review-brn"></div></div>
+        </div>
+        <div id="admin-review-note-wrap" style="display:none;">
+          <span class="caption">처리 메모</span>
+          <div id="admin-review-note"></div>
+        </div>
+      </div>
+
+      <div class="box box-pad stack" style="max-width:72rem;margin-bottom:1.6rem;">
+        <h3>첨부 서류</h3>
+        <div class="krds-file-upload line">
+          <div class="file-list">
+            <ul class="upload-list" id="admin-review-docs"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" id="admin-review-actions" style="max-width:72rem;">
+        <button type="button" class="krds-btn secondary open-modal" data-target="admin-supplement-modal" id="btn-admin-supplement">보완 요청</button>
+        <button type="button" class="krds-btn primary open-modal" data-target="admin-approve-modal" id="btn-admin-approve">승인</button>
+        <button type="button" class="krds-btn tertiary open-modal" style="color:var(--krds-light-color-text-danger);border-color:var(--krds-light-color-text-danger);" data-target="admin-reject-modal" id="btn-admin-reject">반려</button>
+      </div>
+      <p class="caption" id="admin-review-done-msg" style="display:none;max-width:72rem;">이미 처리 완료된 건입니다.</p>
+    </section>
+
+    <!-- 공지사항 & 보도자료 -->
+    <section class="screen" data-screen="board-notice">
+      <div class="screen-head">
+        <div class="eyebrow">고객마당 · 공지사항 &amp; 보도자료</div>
+        <h1>공지사항 · 보도자료</h1>
+        <p>KRDS 표준 접근성 게시판으로, 스크린 리더 탐색과 페이징을 완벽히 지원합니다.</p>
+      </div>
+      <div class="krds-table-wrap">
+        <table class="tbl col data">
+          <caption>공지사항 및 보도자료 목록, 최신순 정렬</caption>
+          <colgroup><col style="width:7rem;"><col><col style="width:11rem;"><col style="width:10rem;"></colgroup>
+          <thead><tr><th scope="col">번호</th><th scope="col">제목</th><th scope="col">구분</th><th scope="col">등록일</th></tr></thead>
+          <tbody>
+            <tr><td class="num">128</td><td><a href="#" class="c-text">기업구조혁신펀드 3차 정시 공고 안내</a></td><td><span class="krds-badge bg-light-primary">공고</span></td><td class="num">2026-07-22</td></tr>
+            <tr><td class="num">127</td><td><a href="#" class="c-text">「온기업」 플랫폼 전면 개편 오픈 안내</a></td><td><span class="krds-badge outline-gray">공지</span></td><td class="num">2026-07-20</td></tr>
+            <tr><td class="num">126</td><td><a href="#" class="c-text">2026년 하반기 자산매입 후 임대(S&amp;LB) 접수 일정</a></td><td><span class="krds-badge bg-light-primary">공고</span></td><td class="num">2026-07-15</td></tr>
+            <tr><td class="num">125</td><td><a href="#" class="c-text">캠코, 중소기업 부실채권 인수 규모 전년比 30%↑</a></td><td><span class="krds-badge outline-gray">보도자료</span></td><td class="num">2026-07-08</td></tr>
+            <tr><td class="num">124</td><td><a href="#" class="c-text">시스템 정기 점검 안내 (7/5 00:00~06:00)</a></td><td><span class="krds-badge outline-gray">공지</span></td><td class="num">2026-07-02</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="krds-pagination">
+        <span class="page-navi prev disabled">이전</span>
+        <div class="page-links">
+          <a class="page-link active" href="#"><span class="sr-only">현재페이지 </span>1</a>
+          <a class="page-link" href="#">2</a>
+          <a class="page-link" href="#">3</a>
+        </div>
+        <a class="page-navi next" href="#">다음</a>
+      </div>
+    </section>
+
+    <!-- 자료실 -->
+    <section class="screen" data-screen="board-archive">
+      <div class="screen-head">
+        <div class="eyebrow">고객마당 · 자료실</div>
+        <h1>자료실</h1>
+        <p>온라인 신청에 필요한 표준 서식과 안내 자료를 다운로드할 수 있습니다.</p>
+      </div>
+      <div class="krds-table-wrap">
+        <table class="tbl col data">
+          <caption>서식 자료실, 최신순 정렬</caption>
+          <colgroup><col style="width:7rem;"><col><col style="width:10rem;"><col style="width:9rem;"></colgroup>
+          <thead><tr><th scope="col">번호</th><th scope="col">자료명</th><th scope="col">등록일</th><th scope="col"></th></tr></thead>
+          <tbody>
+            <tr><td class="num">18</td><td>표준 재무제표 제출 서식</td><td class="num">2026-07-10</td><td><button type="button" class="krds-btn tertiary small">다운로드 <i class="svg-icon ico-down"></i></button></td></tr>
+            <tr><td class="num">17</td><td>위임장·인감증명 첨부 양식</td><td class="num">2026-06-28</td><td><button type="button" class="krds-btn tertiary small">다운로드 <i class="svg-icon ico-down"></i></button></td></tr>
+            <tr><td class="num">16</td><td>자산매각(S&amp;LB) 신청서 서식</td><td class="num">2026-06-15</td><td><button type="button" class="krds-btn tertiary small">다운로드 <i class="svg-icon ico-down"></i></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 이용 가이드 -->
+    <section class="screen" data-screen="board-guide">
+      <div class="screen-head">
+        <div class="eyebrow">고객마당 · 이용 가이드</div>
+        <h1>이용 가이드</h1>
+        <p>홈페이지 메뉴별 이용에 관한 전반적인 안내를 제공합니다.</p>
+      </div>
+      <div class="grid-3">
+        <div class="box box-pad stack"><h3>기업지원 프로그램</h3><p class="body-sm">자가진단으로 내게 맞는 지원 제도를 확인하고, 각 제도 안내 화면에서 바로 온라인 신청으로 이동할 수 있습니다.</p></div>
+        <div class="box box-pad stack"><h3>투자자 라운지 · VDR</h3><p class="body-sm">투자자는 매칭대상 기업정보를 조회하고 의향서를 제출하거나, 국유증권 가상데이터룸에서 상세 실사 자료를 열람할 수 있습니다.</p></div>
+        <div class="box box-pad stack"><h3>마이페이지</h3><p class="body-sm">신청·진행 현황을 실시간으로 확인하고, 보완 요청 서류를 재첨부하거나 회원정보와 권한을 관리할 수 있습니다.</p></div>
+      </div>
+    </section>
+
+    <!-- FAQ & Q&A -->
+    <section class="screen" data-screen="board-faq">
+      <div class="screen-head">
+        <div class="eyebrow">고객마당 · FAQ &amp; Q&amp;A</div>
+        <h1>자주 묻는 질문</h1>
+        <p>카테고리별로 분류된 질문을 아코디언에서 펼쳐보고, 상단 검색으로 빠르게 찾을 수 있습니다.</p>
+      </div>
+      <div class="fieldset" style="max-width:42rem;margin-bottom:1.6rem;">
+        <div class="form-group" style="width:100%;">
+          <div class="form-tit"><label for="faq-search">질문 검색</label></div>
+          <div class="form-conts"><input type="text" id="faq-search" class="krds-input" placeholder="예: 서류 보완 방법" /></div>
+        </div>
+      </div>
+      <div class="krds-accordion" style="max-width:72rem;">
+        <div class="accordion-item active">
+          <h5 class="accordion-header"><button type="button" id="faqHead01" class="btn-accordion" aria-controls="faqBody01">Q. 온라인 신청 중 임시저장한 내용은 얼마나 보관되나요?</button></h5>
+          <div id="faqBody01" class="accordion-collapse collapse" aria-labelledby="faqHead01">
+            <div class="accordion-body">임시저장한 신청서는 마이페이지에서 최대 30일간 보관되며, 이후에는 자동 삭제되어 재작성이 필요합니다.</div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h5 class="accordion-header"><button type="button" id="faqHead02" class="btn-accordion" aria-controls="faqBody02">Q. 자산매입 후 임대(S&amp;LB) 심사는 얼마나 걸리나요?</button></h5>
+          <div id="faqBody02" class="accordion-collapse collapse" aria-labelledby="faqHead02">
+            <div class="accordion-body">사전 상담부터 계약 체결까지 평균 6~8주가 소요되며, 자산 실사 일정에 따라 달라질 수 있습니다.</div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h5 class="accordion-header"><button type="button" id="faqHead03" class="btn-accordion" aria-controls="faqBody03">Q. 보완 서류 요청을 받았는데 어디서 제출하나요?</button></h5>
+          <div id="faqBody03" class="accordion-collapse collapse" aria-labelledby="faqHead03">
+            <div class="accordion-body">신청/보완 현황 조회 화면에서 해당 신청 건의 "보완 서류 제출" 버튼을 눌러 즉시 재첨부할 수 있습니다.</div>
+          </div>
+        </div>
+      </div>
+      <div class="box box-pad stack" style="max-width:72rem;margin-top:2.2rem;">
+        <h3>1:1 문의</h3>
+        <p class="body-sm">원하는 답변을 찾지 못하셨다면 담당자에게 직접 문의하세요.</p>
+        <div class="fieldset">
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="qna-content">문의 내용</label></div><div class="form-conts"><input type="text" id="qna-content" class="krds-input" placeholder="문의하실 내용을 입력하세요" /></div></div>
+        </div>
+        <button type="button" class="krds-btn primary" id="qna-submit" style="width:fit-content;">문의 등록</button>
+      </div>
+    </section>
+
+    <!-- 신고센터 -->
+    <section class="screen" data-screen="board-report">
+      <div class="screen-head">
+        <div class="eyebrow">고객마당 · 신고센터</div>
+        <h1>신고센터</h1>
+        <p>부패·공익신고와 민원을 접수합니다. 신고자 보호에 관한 내용은 기업민원 보호·서비스헌장을 확인하세요.</p>
+      </div>
+      <div class="grid-2" style="margin-bottom:1.8rem;">
+        <div class="box box-pad stack"><h3>신고자 보호 안내</h3><p class="body-sm">신고자의 신원은 「공익신고자 보호법」에 따라 철저히 비밀이 보장되며, 신고를 이유로 한 불이익 조치는 금지됩니다.</p></div>
+        <div class="box box-pad stack"><h3>신고·민원 접수 방법</h3><p class="body-sm">온라인 신고센터 접수 또는 대표전화 1588-3570으로 문의하실 수 있습니다.</p></div>
+      </div>
+      <div class="box box-pad stack" style="max-width:56rem;">
+        <div class="fieldset">
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="report-type">신고·민원 유형</label></div><div class="form-conts"><select id="report-type" class="krds-form-select" style="width:100%;"><option>부패·공익신고</option><option>서비스 불편 민원</option><option>기타 문의</option></select></div></div>
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="report-content">내용</label></div><div class="form-conts"><input type="text" id="report-content" class="krds-input" placeholder="신고·민원 내용을 입력하세요" /></div></div>
+        </div>
+        <div class="krds-check-area"><div class="krds-form-check"><input type="checkbox" id="report-anon" checked /><label for="report-anon">익명으로 접수</label></div></div>
+        <button type="button" class="krds-btn primary" id="report-submit" style="width:fit-content;">접수하기</button>
+      </div>
+      <button type="button" class="krds-btn tertiary" style="margin-top:1.6rem;" data-goto="board-charter">기업민원 보호·서비스헌장 보기</button>
+    </section>
+
+    <!-- 기업민원 보호 · 서비스헌장 -->
+    <section class="screen" data-screen="board-charter">
+      <div class="screen-head">
+        <div class="eyebrow">고객마당 · 기업민원 보호·서비스헌장</div>
+        <h1>기업민원 보호·서비스헌장</h1>
+        <p>온기업은 이용 기업의 민원을 신속·공정하게 처리하고, 신고자를 두텁게 보호하기 위해 다음과 같이 서비스헌장을 선언합니다.</p>
+      </div>
+      <div class="box box-pad stack" style="margin-bottom:1.8rem;">
+        <h3>서비스 헌장 선언</h3>
+        <p class="body-sm">우리는 기업지원 제도를 이용하는 모든 기업의 권익을 존중하며, 민원을 신속·공정하게 처리하고 제도 개선에 적극 반영할 것을 약속합니다.</p>
+      </div>
+      <div class="grid-3">
+        <div class="box box-pad stack"><h3>신속 처리</h3><p class="body-sm">접수된 민원은 처리기한 내 신속하게 처리하고, 처리 결과를 명확히 안내합니다.</p></div>
+        <div class="box box-pad stack"><h3>공정 심사</h3><p class="body-sm">모든 신청·심사는 객관적 기준에 따라 공정하게 처리하며, 부당한 차별을 하지 않습니다.</p></div>
+        <div class="box box-pad stack"><h3>신고자 보호</h3><p class="body-sm">「공익신고자 보호법」에 따라 신고자의 신원을 비밀로 보호하며, 신고를 이유로 한 불이익 조치를 금지합니다.</p></div>
+      </div>
+    </section>
+
+    <!-- 운영목적 및 역할 -->
+    <section class="screen" data-screen="center-mission">
+      <div class="screen-head">
+        <div class="eyebrow">센터소개 · 운영목적 및 역할</div>
+        <h1>캠코 기업지원센터 안내</h1>
+        <p>중소·중견기업의 경영 정상화와 자산 유동화를 지원하는 캠코 기업지원센터를 소개합니다.</p>
+      </div>
+      <div class="grid-3" style="margin-bottom:1.8rem;">
+        <div class="box box-pad stat"><span class="n num">3,412</span><span class="l">누적 지원 기업 수</span></div>
+        <div class="box box-pad stat"><span class="n num">2.1조</span><span class="l">누적 지원 규모(원)</span></div>
+        <div class="box box-pad stat"><span class="n num">7</span><span class="l">전국 권역별 센터</span></div>
+      </div>
+      <div class="box box-pad stack">
+        <h3>비전</h3>
+        <p class="body-sm">경영 위기에 놓인 기업이 자산을 활용해 유동성을 확보하고, 다시 성장할 수 있도록 원스톱으로 지원하는 것을 목표로 합니다. 자산관리·채권·투자 부서가 통합 운영되어 기업 상황에 맞는 제도를 함께 설계합니다.</p>
+      </div>
+    </section>
+
+    <!-- 온기업 CI -->
+    <section class="screen" data-screen="center-ci">
+      <div class="screen-head">
+        <div class="eyebrow">센터소개 · 온기업 CI</div>
+        <h1>온기업 CI</h1>
+        <p>기업구조혁신지원센터의 역할과 방향성을 직관적으로 보여주는 "온기업"은 온비드, 온크레딧과 더불어 한국자산관리공사에서 운영하는 기업 경영정상화 통합지원 대표 브랜드입니다.</p>
+      </div>
+
+      <div class="box box-pad" style="margin-bottom:1.6rem;display:flex;flex-direction:column;align-items:center;gap:1.8rem;">
+        <svg class="ci-mark" width="120" height="120" aria-hidden="true"><use href="#ci-wing"/></svg>
+        <div class="row" style="gap:2.8rem;">
+          <div class="row" style="gap:.8rem;">
+            <svg class="ci-mark" width="28" height="28" aria-hidden="true"><use href="#ci-wing"/></svg>
+            <span style="font-size:2.6rem;font-weight:800;color:var(--ci-blue-2);">온기업</span>
+          </div>
+          <div class="row" style="gap:.8rem;">
+            <svg class="ci-mark" width="28" height="28" aria-hidden="true"><use href="#ci-wing"/></svg>
+            <span style="font-size:2.6rem;font-weight:800;color:var(--ci-blue-2);">Oncorp</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:1.6rem;">
+        <div class="box box-pad stack">
+          <h3>심볼 — "희망의 날개"</h3>
+          <p class="body-sm">경영애로 기업의 정상화와 턴어라운드를 곁에서 지원하고 함께하고자 하는 센터의 염원을 "희망의 날개"로 표현했습니다. 날개 아래의 무채색 심볼은 이전의 기업을, 위의 컬러 심볼은 개선된 기업을 상징합니다. 날개를 로고타입 우상단에 배치하여, 구조개선 희망기업을 위하는 따뜻한 마음과 중소기업이 "온기업"을 통해 비상하도록 돕겠다는 의미를 담았습니다.</p>
+        </div>
+        <div class="box box-pad stack">
+          <h3>브랜드 컬러 — 캠코블루 · 캠코레드</h3>
+          <p class="body-sm" style="margin-bottom:.6rem;">국가자산종합관리기관으로서의 신뢰성과 전문성을 상징하는 캠코블루와, 미래를 선도하는 열정과 기업을 위하는 따뜻한 마음을 상징하는 캠코레드를 사용하여 계열 브랜드의 일관성과 통일성을 도모하였습니다.</p>
+          <div class="row" style="gap:1.4rem;">
+            <div class="stack" style="gap:.4rem;align-items:center;"><div style="width:4.4rem;height:4.4rem;border-radius:.8rem;background:var(--ci-blue-2);"></div><span class="caption">캠코블루<br/>#003876</span></div>
+            <div class="stack" style="gap:.4rem;align-items:center;"><div style="width:4.4rem;height:4.4rem;border-radius:.8rem;background:var(--ci-red-1);"></div><span class="caption">캠코레드<br/>#EE2925</span></div>
+            <div class="stack" style="gap:.4rem;align-items:center;"><div style="width:4.4rem;height:4.4rem;border-radius:.8rem;background:var(--ci-grey-2);"></div><span class="caption">무채색<br/>#AEB1B5</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="box box-pad stack">
+        <h3>슬로건</h3>
+        <p class="body-sm">"복잡한 캠코 기업지원 제도, 온기업에서 한 번에" — 흩어져 있던 기업지원 제도를 온기업 하나로 모아 쉽고 따뜻하게 전달한다는 의미를 담고 있습니다.</p>
+        <button type="button" class="krds-btn tertiary small" style="width:fit-content;margin-top:.4rem;" id="ci-download">CI 다운로드 안내</button>
+      </div>
+    </section>
+
+    <!-- 오시는 길 -->
+    <section class="screen" data-screen="center-location">
+      <div class="screen-head">
+        <div class="eyebrow">센터소개 · 오시는 길</div>
+        <h1>오시는 길</h1>
+        <p>지도 및 대중교통 안내입니다. 모바일에서는 길찾기 앱으로 바로 연결되는 숏컷을 제공합니다.</p>
+      </div>
+      <div class="map-placeholder">
+        <span>지도 API 연동 영역 (카카오맵 · 네이버맵)</span>
+        <span class="num" style="font-size:1.1rem;">부산광역시 남구 문현금융로 40</span>
+      </div>
+      <div class="grid-2" style="margin-top:1.6rem;">
+        <div class="box box-pad stack"><h3>대중교통</h3><p class="body-sm">부산 도시철도 2호선 문현역 5번 출구, 도보 6분<br/>버스 27, 108, 583번 문현교차로 정류장 하차</p></div>
+        <div class="box box-pad stack">
+          <h3>모바일 길찾기</h3>
+          <div class="row"><button type="button" class="krds-btn tertiary small">카카오맵으로 길찾기</button><button type="button" class="krds-btn tertiary small">네이버맵으로 길찾기</button></div>
+        </div>
+      </div>
+    </section>
+
+    </div>
+  </div>
+  </main>
+
+  <!-- footer -->
+  <footer id="krds-footer">
+    <div class="inner">
+      <div class="f-logo">
+        <div class="footer-ci">
+          <svg class="ci-mark" width="22" height="22" aria-hidden="true"><use href="#ci-wing"/></svg>
+          <span class="ci-brand-word">온기업</span>
+        </div>
+      </div>
+      <div class="f-cnt">
+        <div class="f-info">
+          <p class="info-addr">한국자산관리공사(KAMCO) 기업구조혁신지원센터<br/>부산광역시 남구 문현금융로 40</p>
+          <ul class="info-cs">
+            <li><strong class="strong">대표전화 1588-3570</strong><span class="span">개인정보보호책임자 홍길동</span></li>
+          </ul>
+        </div>
+        <div class="f-link">
+          <div class="link-go">
+            <a href="#/board-faq" class="krds-btn medium text">자주 묻는 질문 <i class="svg-icon ico-angle right"></i></a>
+            <button type="button" class="krds-btn medium text open-modal" data-target="sitemap-overlay">사이트맵 <i class="svg-icon ico-angle right"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="f-btm">
+        <div class="f-btm-text">
+          <div class="f-menu">
+            <a href="#" class="point">이용약관</a>
+            <a href="#">개인정보처리방침</a>
+            <a href="#">웹 접근성 품질인증 안내</a>
+          </div>
+          <p class="f-copy">© KAMCO. 이 페이지는 첨부된 메뉴 IA와 KRDS(krds-uiux 1.0.4) 컴포넌트를 기준으로 제작된 스토리보드 목업이며, 실제 서비스가 아닙니다.</p>
+        </div>
+        <div class="krds-identifier">
+          <span class="ban-txt">이 누리집은 행정안전부 산하기관 누리집입니다.</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!-- //footer -->
+</div>
+
+<!-- 사이트맵 (krds-modal 컴포넌트) -->
+<section id="sitemap-overlay" class="krds-modal fade" role="dialog" aria-labelledby="sitemap-title">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="sitemap-title" class="modal-title">사이트맵</h2>
+      </div>
+      <div class="modal-conts">
+        <div class="conts-area">
+          <div class="grid-3" id="sitemap-grid"></div>
+        </div>
+      </div>
+      <button type="button" class="krds-btn medium icon btn-close close-modal">
+        <span class="sr-only">사이트맵 닫기</span>
+        <i class="svg-icon ico-popup-close"></i>
+      </button>
+    </div>
+  </div>
+  <div class="modal-back close-modal"></div>
+</section>
+
+<!-- 온라인 신청 최종 제출 확인 (krds-modal 컴포넌트) -->
+<button type="button" class="open-modal" data-target="apply-submit-confirm" id="btn-open-submit-confirm" style="display:none;" aria-hidden="true">제출 확인 열기</button>
+<section id="apply-submit-confirm" class="krds-modal fade" role="dialog" aria-labelledby="submit-confirm-title">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="submit-confirm-title" class="modal-title">신청서를 제출하시겠습니까?</h2>
+      </div>
+      <div class="modal-conts">
+        <div class="conts-area">제출 후에는 입력한 신청 내용을 수정할 수 없습니다. 접수 이후 보완이 필요한 경우 마이페이지의 신청 현황에서 별도로 서류를 제출해야 합니다.</div>
+      </div>
+      <div class="modal-btn btn-wrap">
+        <button type="button" class="krds-btn medium tertiary close-modal">취소</button>
+        <button type="button" class="krds-btn medium primary close-modal" id="btn-confirm-submit">확인 및 제출</button>
+      </div>
+      <button type="button" class="krds-btn medium icon btn-close close-modal">
+        <span class="sr-only">닫기</span>
+        <i class="svg-icon ico-popup-close"></i>
+      </button>
+    </div>
+  </div>
+  <div class="modal-back close-modal"></div>
+</section>
+
+<!-- 관리자: 보완 요청 발송 (krds-modal 컴포넌트) -->
+<section id="admin-supplement-modal" class="krds-modal fade" role="dialog" aria-labelledby="admin-supplement-title">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="admin-supplement-title" class="modal-title">보완 요청 발송</h2>
+      </div>
+      <div class="modal-conts">
+        <div class="conts-area">
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="admin-supplement-input">요청 항목 및 사유</label></div><div class="form-conts"><input type="text" id="admin-supplement-input" class="krds-input" placeholder="예: 최근 3개년 재무제표 원본 재제출 요청" style="width:100%;" /></div></div>
+        </div>
+      </div>
+      <div class="modal-btn btn-wrap">
+        <button type="button" class="krds-btn medium tertiary close-modal" id="admin-supplement-cancel">취소</button>
+        <button type="button" class="krds-btn medium primary" id="admin-supplement-confirm">보완 요청 발송</button>
+      </div>
+      <button type="button" class="krds-btn medium icon btn-close close-modal">
+        <span class="sr-only">닫기</span>
+        <i class="svg-icon ico-popup-close"></i>
+      </button>
+    </div>
+  </div>
+  <div class="modal-back close-modal"></div>
+</section>
+
+<!-- 관리자: 승인 처리 (krds-modal 컴포넌트) -->
+<section id="admin-approve-modal" class="krds-modal fade" role="dialog" aria-labelledby="admin-approve-title">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="admin-approve-title" class="modal-title">신청을 승인하시겠습니까?</h2>
+      </div>
+      <div class="modal-conts">
+        <div class="conts-area">
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="admin-approve-input">승인 사유 및 지원 조건</label></div><div class="form-conts"><input type="text" id="admin-approve-input" class="krds-input" placeholder="예: 재무 건전성 적정, 30억 원 한도 지원" style="width:100%;" /></div></div>
+        </div>
+      </div>
+      <div class="modal-btn btn-wrap">
+        <button type="button" class="krds-btn medium tertiary close-modal" id="admin-approve-cancel">취소</button>
+        <button type="button" class="krds-btn medium primary" id="admin-approve-confirm">승인 확정</button>
+      </div>
+      <button type="button" class="krds-btn medium icon btn-close close-modal">
+        <span class="sr-only">닫기</span>
+        <i class="svg-icon ico-popup-close"></i>
+      </button>
+    </div>
+  </div>
+  <div class="modal-back close-modal"></div>
+</section>
+
+<!-- 관리자: 반려 처리 (krds-modal 컴포넌트) -->
+<section id="admin-reject-modal" class="krds-modal fade" role="dialog" aria-labelledby="admin-reject-title">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="admin-reject-title" class="modal-title">신청을 반려하시겠습니까?</h2>
+      </div>
+      <div class="modal-conts">
+        <div class="conts-area">
+          <div class="form-group" style="width:100%;"><div class="form-tit"><label for="admin-reject-input">반려 사유 <span class="doc-req">필수</span></label></div><div class="form-conts"><input type="text" id="admin-reject-input" class="krds-input" placeholder="예: 담보 자산 감정가 미달" style="width:100%;" /></div></div>
+        </div>
+      </div>
+      <div class="modal-btn btn-wrap">
+        <button type="button" class="krds-btn medium tertiary close-modal" id="admin-reject-cancel">취소</button>
+        <button type="button" class="krds-btn medium primary" id="admin-reject-confirm">반려 확정</button>
+      </div>
+      <button type="button" class="krds-btn medium icon btn-close close-modal">
+        <span class="sr-only">닫기</span>
+        <i class="svg-icon ico-popup-close"></i>
+      </button>
+    </div>
+  </div>
+  <div class="modal-back close-modal"></div>
+</section>
+</div>
+
+<div class="toast" id="toast">임시저장되었습니다</div>
+
+<script src="assets/krds/js/krds.min.js"></script>
+<script>
+  // 메뉴 IA는 1~2Depth만 존재: d1(1Depth) > items(2Depth), 별도의 그룹(구 2Depth) 계층 없음
+  const IA = [
+    { d1:'센터소개', items:[
+      {id:'center-mission', label:'운영목적 및 역할'},
+      {id:'center-ci', label:'온기업 CI'},
+      {id:'center-location', label:'오시는 길'},
+    ]},
+    { d1:'기업지원 프로그램', items:[
+      {id:'program-overview', label:'캠코 지원프로그램 한눈에 보기'},
+      {id:'program-diagnosis', label:'내게 맞는 지원 프로그램 찾기'},
+      {id:'program-investor-match', label:'투자자 매칭 지원'},
+      {id:'program-snlb', label:'자산매입 후 임대(S&LB)'},
+      {id:'program-ship-lb', label:'선박매입 후 임대'},
+      {id:'program-workout', label:'회생·워크아웃 기업 지원'},
+      {id:'program-fund', label:'펀드 출·투자(기업지원펀드)'},
+      {id:'program-fund-restructure', label:'기업구조혁신펀드 운용'},
+      {id:'program-fund-pf', label:'PF사업장 정상화 지원펀드'},
+      {id:'program-bond', label:'담보부사채 발행지원'},
+      {id:'program-partner-policy', label:'유관기관 지원정책 안내'},
+    ]},
+    { d1:'투자자 라운지', items:[
+      {id:'investor-companies', label:'매칭대상 기업정보 조회'},
+      {id:'investor-proposal', label:'투자제안 및 의향서 제출'},
+      {id:'investor-matching', label:'매칭 관리'},
+    ]},
+    { d1:'국유증권 가상데이터룸', items:[
+      {id:'vdr-detail', label:'국유증권 매각 대상기업 상세 조회'},
+    ]},
+    { d1:'고객마당', items:[
+      {id:'board-notice', label:'공지사항 & 보도자료'},
+      {id:'board-archive', label:'자료실'},
+      {id:'board-guide', label:'이용 가이드'},
+      {id:'board-faq', label:'FAQ & Q&A'},
+      {id:'board-report', label:'신고센터'},
+      {id:'board-charter', label:'기업민원 보호·서비스헌장'},
+    ]},
+    { d1:'마이페이지', items:[
+      {id:'mypage-status', label:'신청 및 진행 현황'},
+      {id:'mypage-docs', label:'제출 서류/보완 관리'},
+      {id:'mypage-account', label:'회원정보 및 권한 관리'},
+    ]},
+    { d1:'캠코 관리자', items:[
+      {id:'admin-dashboard', label:'관리자 대시보드'},
+      {id:'admin-applications', label:'신청 접수 목록'},
+    ]},
+  ];
+
+  // 메가메뉴/사이트맵에는 노출되지 않지만 화면 흐름상 존재하는 하위 화면(브레드크럼 표시용)
+  const EXTRA_SCREENS = {
+    'program-snlb-assets': { cat:'기업지원 프로그램', label:'대상 자산 조회' },
+    'program-workout-restructure': { cat:'기업지원 프로그램', label:'채권 재조정 시뮬레이터' },
+    'apply': { cat:'기업지원 프로그램', label:'온라인 신청' },
+    'apply-cert': { cat:'마이페이지', label:'증명서 발급' },
+    'admin-review': { cat:'캠코 관리자', label:'신청 심사 상세' },
+  };
+
+  // ---- GNB(PC) : krds-main-menu 실제 구조(gnb-main-trigger/gnb-toggle-wrap/gnb-main-list/gnb-sub-list) ----
+  const gnbMenu = document.getElementById('gnb-menu');
+  gnbMenu.innerHTML = IA.map((d1) =>
+    '<li>' +
+      '<button type="button" class="gnb-main-trigger" data-trigger="gnb">' + d1.d1 + '</button>' +
+      '<div class="gnb-toggle-wrap">' +
+        '<div class="gnb-main-list">' +
+          '<div class="gnb-sub-list single-list between">' +
+            '<div class="gnb-sub-content">' +
+              '<h2 class="sub-title"><span>' + d1.d1 + '</span></h2>' +
+              '<ul>' + d1.items.map(it => '<li><a href="#/' + it.id + '">' + it.label + '</a></li>').join('') + '</ul>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</li>'
+  ).join('');
+
+  // ---- GNB(모바일) : 1Depth 탭 + 2Depth 목록(그룹 없이 바로 나열) ----
+  const gnbMobileTabs = document.getElementById('gnb-mobile-tabs');
+  const gnbMobilePanels = document.getElementById('gnb-mobile-panels');
+  gnbMobileTabs.innerHTML = IA.map((d1, i) => '<li><a href="#mGnb-anchor' + i + '" class="gnb-main-trigger">' + d1.d1 + '</a></li>').join('');
+  gnbMobilePanels.innerHTML = IA.map((d1, i) =>
+    '<div class="gnb-sub-list" id="mGnb-anchor' + i + '">' +
+      '<h2 class="sub-title">' + d1.d1 + '</h2>' +
+      '<ul>' + d1.items.map(it => '<li><a href="#/' + it.id + '" class="gnb-sub-trigger">' + it.label + '</a></li>').join('') + '</ul>' +
+    '</div>'
+  ).join('');
+
+  // ---- 사이트맵 (krds-modal의 open-modal/close-modal 트리거를 krds_modal.init()이 자동 연결) ----
+  const sitemapGrid = document.getElementById('sitemap-grid');
+  sitemapGrid.innerHTML = IA.map(d1 =>
+    '<div class="stack" style="gap:.6rem;"><h4 style="font-size:1.4rem;padding-bottom:.6rem;border-bottom:1px solid var(--krds-light-color-border-default);">' + d1.d1 + '</h4>' +
+    d1.items.map(it => '<a href="#/' + it.id + '" class="krds-btn text small sitemap-link" style="justify-content:flex-start;">' + it.label + '</a>').join('') +
+    '</div>'
+  ).join('');
+  // 사이트맵 내 메뉴 링크 클릭 시 이동과 함께 모달도 닫는다
+  sitemapGrid.addEventListener('click', (e) => {
+    if(e.target.closest('.sitemap-link')){ document.querySelector('#sitemap-overlay .close-modal')?.click(); }
+  });
+
+  // ---- routing ----
+  const VALID_SCREENS = Array.from(document.querySelectorAll('.screen')).map(s => s.dataset.screen);
+
+  function labelFor(id){
+    for(const d1 of IA){ for(const it of d1.items){
+      if(it.id === id) return it.label;
+    }}
+    if(EXTRA_SCREENS[id]) return EXTRA_SCREENS[id].label;
+    return null;
+  }
+
+  // 브레드크럼: "홈 > 카테고리 > 현재 페이지" 형식, 현재 페이지는 링크 제외 (krds-breadcrumb-wrap 구조)
+  function crumbFor(id){
+    const home = '<li class="home"><a href="#/home" class="txt">홈</a></li>';
+    if(id === 'home') return home;
+    if(id === 'login') return home + '<li><span class="txt">로그인</span></li>';
+    if(id === 'signup') return home + '<li><span class="txt">회원가입</span></li>';
+    for(const d1 of IA){
+      for(const it of d1.items){
+        if(it.id === id){
+          return home + '<li><span class="txt">' + d1.d1 + '</span></li><li><span class="txt">' + it.label + '</span></li>';
+        }
+      }
+    }
+    if(EXTRA_SCREENS[id]){
+      return home + '<li><span class="txt">' + EXTRA_SCREENS[id].cat + '</span></li><li><span class="txt">' + EXTRA_SCREENS[id].label + '</span></li>';
+    }
+    return home;
+  }
+
+  function titleFor(id){
+    if(id === 'home') return '온기업';
+    if(id === 'login') return '로그인 | 온기업';
+    if(id === 'signup') return '회원가입 | 온기업';
+    return (labelFor(id) || id) + ' | 온기업';
+  }
+
+  // 현재 화면이 속한 GNB 대분류(d1)를 찾는다 — LNB(좌측 내비게이션) 렌더링에 사용
+  function categoryFor(id){
+    for(const d1 of IA){ for(const it of d1.items){
+      if(it.id === id) return d1;
+    }}
+    if(EXTRA_SCREENS[id]) return IA.find(d1 => d1.d1 === EXTRA_SCREENS[id].cat) || null;
+    return null;
+  }
+
+  // 사이드 메뉴(LNB) — krds-side-navigation 구조, 메뉴 IA가 1~2Depth뿐이므로 그룹/아코디언 없이 항목을 바로 나열
+  function renderLNB(id){
+    const layout = document.getElementById('content-layout');
+    const lnbWrap = document.getElementById('lnb-wrap');
+    const cat = categoryFor(id);
+    if(!cat){ layout.classList.remove('has-lnb'); lnbWrap.innerHTML = ''; return; }
+    layout.classList.add('has-lnb');
+    lnbWrap.innerHTML = '<nav class="krds-side-navigation"><h2 class="lnb-tit">' + cat.d1 + '</h2>' +
+      '<ul class="lnb-list" role="menubar">' + cat.items.map(it =>
+        '<li class="lnb-item' + (it.id === id ? ' active' : '') + '" role="none">' +
+          '<a class="lnb-btn lnb-link" role="menuitem" href="#/' + it.id + '"' + (it.id === id ? ' aria-current="page"' : '') + '>' + it.label + '</a>' +
+        '</li>'
+      ).join('') + '</ul></nav>';
+  }
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.dataset.screen === id));
+    document.getElementById('crumb').innerHTML = crumbFor(id);
+    document.title = titleFor(id);
+    renderLNB(id);
+    // krds.min.js의 krds_mainMenuPC/krds_mainMenuMobile 객체는 별도 <script> 스코프의 const라
+    // 이 스크립트에서 직접 호출할 수 없으므로, 실제 종료 트리거를 합성 클릭하여 정식 종료 로직(inert/포커스 트랩 정리 포함)을 그대로 재사용한다
+    if(document.getElementById('mobile-nav').classList.contains('is-open')){
+      document.getElementById('close-nav')?.click();
+    }
+    document.querySelector('.gnb-main-trigger.active')?.click();
+    window.scrollTo(0,0);
+  }
+
+  // URL 구조: #/<화면키> 또는 #/apply/<step>  (step: 1~4 또는 done)
+  function navigateTo(id, opts){
+    opts = opts || {};
+    const newHash = '#/' + id + (opts.step ? '/' + opts.step : '');
+    if(location.hash === newHash){ handleRoute(); }
+    else { location.hash = newHash; }
+  }
+
+  function handleRoute(){
+    const raw = location.hash.replace(/^#\/?/, '');
+    const parts = raw.split('/');
+    let id = parts[0] || 'home';
+    const stepParam = parts[1];
+    if(!VALID_SCREENS.includes(id)){
+      toast('요청하신 화면(' + id + ')을 찾을 수 없어 홈으로 이동합니다');
+      id = 'home';
+      history.replaceState(null, '', '#/home');
+    }
+    showScreen(id);
+    if(id === 'apply'){ applyOnStep(stepParam); }
+    if(id === 'admin-dashboard'){ updateAdminStats(); }
+    if(id === 'admin-applications'){ renderAdminApplications(); }
+    if(id === 'admin-review'){ renderAdminReview(stepParam); }
+  }
+
+  window.addEventListener('hashchange', handleRoute);
+
+  document.body.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-goto]');
+    if(!el) return;
+    const target = el.dataset.goto;
+    if(target === 'apply' && el.dataset.prefill){
+      e.preventDefault();
+      const note = document.getElementById('apply-prefill-note');
+      note.style.display = 'block';
+      note.textContent = '"' + el.dataset.prefill + '" 프로그램 정보가 자동으로 채워졌습니다.';
+      document.getElementById('program-select').value = el.dataset.prefill;
+      document.getElementById('confirm-program').textContent = el.dataset.prefill;
+      navigateTo('apply', {step:1});
+      return;
+    }
+    if(el.tagName === 'A') return; // href="#/id"가 이미 라우팅을 처리
+    navigateTo(target);
+  });
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  // ---- 내게 맞는 지원 프로그램 찾기: 진단 실행 ----
+  document.getElementById('run-diagnosis').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    const status = document.getElementById('diagnosis-status');
+    btn.disabled = true;
+    status.innerHTML = '<span class="krds-spinner" role="status" style="width:1.4rem;height:1.4rem;"><span class="sr-only">진단 중</span></span> 진단 중... 약 3초 소요됩니다';
+    setTimeout(() => {
+      btn.disabled = false;
+      status.textContent = '';
+      document.getElementById('diagnosis-result').style.display = 'flex';
+    }, 1100);
+  });
+  document.getElementById('save-diagnosis').addEventListener('click', () => toast('진단 결과가 마이페이지에 저장되었습니다'));
+
+  // ---- 회생·워크아웃 기업 지원: 채권 재조정 계산기 ----
+  document.getElementById('run-debt-calc').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    btn.textContent = '계산 중...';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = '조정 결과 계산';
+      btn.disabled = false;
+      const principal = parseFloat(document.getElementById('debt-principal').value) || 0;
+      const rate = parseFloat(document.getElementById('debt-rate').value) || 0;
+      const grace = parseInt(document.getElementById('debt-grace').value, 10) || 12;
+      const remainMonths = 60 - grace;
+      const monthlyRate = rate / 100 / 12;
+      const principalWon = principal * 100000000;
+      const payment = remainMonths > 0
+        ? (principalWon * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -remainMonths))
+        : principalWon;
+      document.getElementById('debt-monthly').textContent = Math.round(payment / 10000).toLocaleString('ko-KR') + '만 원';
+      document.getElementById('debt-result').style.display = 'flex';
+    }, 800);
+  });
+
+  // ---- 투자유치 희망기업 조회: 업종/지역 필터 ----
+  function applyInvestorFilter(){
+    const industry = document.getElementById('investor-filter-industry').value;
+    const region = document.getElementById('investor-filter-region').value;
+    const items = document.querySelectorAll('#investor-company-list .structured-item');
+    let visibleCount = 0;
+    items.forEach(li => {
+      const match = (!industry || li.dataset.industry === industry) && (!region || li.dataset.region === region);
+      li.style.display = match ? '' : 'none';
+      if(match) visibleCount++;
+    });
+    document.getElementById('investor-filter-empty').style.display = visibleCount === 0 ? 'block' : 'none';
+  }
+  document.getElementById('investor-filter-industry').addEventListener('change', applyInvestorFilter);
+  document.getElementById('investor-filter-region').addEventListener('change', applyInvestorFilter);
+
+  // ---- 매칭 관리: 의향서 제출/VDR 요청 이력 ----
+  const MATCHING_RECORDS = [
+    { target:'산업설비 유지보수 C사', type:'자산 인수', amount:'20억 원', date:'2026-07-15', status:'검토중', badge:'bg-light-warning' },
+  ];
+  const VDR_REQUESTS = [
+    { target:'냉동물류 전문기업 B사', investorType:'기관투자자', date:'2026-07-12', status:'승인완료', badge:'bg-light-success' },
+  ];
+  function renderMatchingTables(){
+    document.getElementById('matching-table-body').innerHTML = MATCHING_RECORDS.map(r =>
+      '<tr><td>' + r.target + '</td><td>' + r.type + '</td><td class="num">' + r.amount + '</td><td class="num">' + r.date + '</td><td><span class="krds-badge ' + r.badge + '">' + r.status + '</span></td></tr>'
+    ).join('');
+    document.getElementById('vdr-table-body').innerHTML = VDR_REQUESTS.map(r =>
+      '<tr><td>' + r.target + '</td><td>' + r.investorType + '</td><td class="num">' + r.date + '</td><td><span class="krds-badge ' + r.badge + '">' + r.status + '</span></td></tr>'
+    ).join('');
+  }
+  renderMatchingTables();
+
+  // ---- 국유증권 가상데이터룸 VDR 신청 ----
+  document.getElementById('vdr-request').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    const status = document.getElementById('vdr-status');
+    btn.disabled = true;
+    status.textContent = '요청을 처리하는 중입니다...';
+    setTimeout(() => {
+      btn.disabled = false;
+      status.textContent = 'VDR 접근 권한이 신청되었습니다. 대상 기업 승인 후 이메일로 접속 정보가 발송됩니다.';
+      VDR_REQUESTS.unshift({
+        target: document.getElementById('vdr-target').value,
+        investorType: document.getElementById('vdr-investor-type').value,
+        date: '2026-07-26',
+        status: '승인대기',
+        badge: 'bg-light-warning'
+      });
+      renderMatchingTables();
+    }, 900);
+  });
+
+  // ---- 투자제안 및 의향서 제출 ----
+  document.getElementById('proposal-submit').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    const status = document.getElementById('proposal-status');
+    btn.disabled = true;
+    status.textContent = '제출하는 중입니다...';
+    setTimeout(() => {
+      btn.disabled = false;
+      status.textContent = '투자 의향서가 제출되었습니다. 대상 기업 검토 후 매칭 관리에서 진행 상황을 확인할 수 있습니다.';
+      MATCHING_RECORDS.unshift({
+        target: document.getElementById('proposal-target').value,
+        type: document.getElementById('proposal-type').value,
+        amount: document.getElementById('proposal-amount').value + '억 원',
+        date: '2026-07-26',
+        status: '검토중',
+        badge: 'bg-light-warning'
+      });
+      renderMatchingTables();
+    }, 900);
+  });
+
+  // ---- 회원정보 및 권한 관리 저장 ----
+  document.getElementById('account-save').addEventListener('click', () => toast('회원정보가 저장되었습니다'));
+
+  // ---- FAQ & Q&A: 1:1 문의 등록 ----
+  document.getElementById('qna-submit').addEventListener('click', () => {
+    const content = document.getElementById('qna-content').value.trim();
+    if(!content){ toast('문의 내용을 입력하세요'); return; }
+    toast('문의가 접수되었습니다');
+    document.getElementById('qna-content').value = '';
+  });
+
+  // ---- 신고센터 ----
+  document.getElementById('report-submit').addEventListener('click', () => toast('신고·민원이 접수되었습니다'));
+
+  // ---- 온기업 CI 다운로드 ----
+  document.getElementById('ci-download').addEventListener('click', () => toast('실제 서비스에서는 CI 가이드북·로고 파일을 다운로드할 수 있습니다'));
+
+  // ---- 온라인 신청: krds-step-wrap 기반 스텝퍼 ----
+  const steps = ['step-1','step-2','step-3','step-4'];
+  const stepLabels = ['기업정보','프로그램 선택','서류 첨부','최종 확인'];
+  let currentStep = 0;
+
+  function renderStepper(){
+    const el = document.getElementById('stepper');
+    el.innerHTML = steps.map((s,i) => {
+      const state = i < currentStep ? 'done' : (i === currentStep ? 'active' : '');
+      const marker = i < currentStep ? '<i class="step ico-step-done"><span class="sr-only">완료</span></i>' : '<i class="step">' + (i+1) + '단계</i>';
+      const current = i === currentStep ? '<em class="sr-only">현재단계</em>' : '';
+      return '<li class="' + state + '"><span>' + current + marker + '<span class="step-tit">' + stepLabels[i] + '</span></span></li>';
+    }).join('');
+  }
+
+  function docsComplete(){
+    const items = document.querySelectorAll('#step-3 .doc-item');
+    return Array.from(items).every(it => it.dataset.required !== 'true' || it.dataset.uploaded === 'true');
+  }
+
+  function updateNextState(){
+    const nextBtn = document.getElementById('btn-next');
+    if(currentStep === 2){
+      nextBtn.disabled = !docsComplete();
+      nextBtn.textContent = docsComplete() ? '다음 단계' : '필수 서류를 첨부하세요';
+    } else {
+      nextBtn.disabled = false;
+      nextBtn.textContent = currentStep === 3 ? '신청 최종 제출' : '다음 단계';
+    }
+  }
+
+  document.querySelectorAll('#step-3 .doc-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const item = e.currentTarget.closest('.doc-item');
+      const uploaded = item.dataset.uploaded !== 'true';
+      item.dataset.uploaded = String(uploaded);
+      e.currentTarget.textContent = uploaded ? '첨부완료' : '첨부하기';
+      e.currentTarget.classList.toggle('tertiary', !uploaded);
+      updateNextState();
+    });
+  });
+
+  function renderStep(){
+    steps.forEach((id, i) => document.getElementById(id).style.display = i === currentStep ? 'block' : 'none');
+    document.getElementById('step-done').style.display = 'none';
+    document.getElementById('apply-nav').style.display = 'flex';
+    document.getElementById('stepper').style.display = 'flex';
+    document.getElementById('btn-prev').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+    renderStepper();
+    updateNextState();
+  }
+
+  function showDone(){
+    steps.forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('step-done').style.display = 'block';
+    document.getElementById('apply-nav').style.display = 'none';
+    document.getElementById('stepper').style.display = 'none';
+  }
+
+  function applyOnStep(stepParam){
+    if(stepParam === 'done'){
+      if(!docsComplete()){ toast('필수 서류를 먼저 첨부하세요'); navigateTo('apply', {step: 3}); return; }
+      showDone(); return;
+    }
+    const n = parseInt(stepParam, 10);
+    let target = (n >= 1 && n <= steps.length) ? n - 1 : 0;
+    if(target > 2 && !docsComplete()){ toast('필수 서류를 먼저 첨부하세요'); target = 2; }
+    currentStep = target;
+    renderStep();
+  }
+
+  document.getElementById('btn-next').addEventListener('click', () => {
+    if(currentStep === steps.length - 1){ document.getElementById('btn-open-submit-confirm').click(); return; }
+    navigateTo('apply', {step: currentStep + 2});
+  });
+  document.getElementById('btn-confirm-submit').addEventListener('click', () => navigateTo('apply', {step:'done'}));
+  document.getElementById('btn-prev').addEventListener('click', () => { if(currentStep > 0){ navigateTo('apply', {step: currentStep}); }});
+  document.getElementById('btn-save-draft').addEventListener('click', () => toast('임시저장되었습니다'));
+
+  // ---- 신청 및 진행 현황: 보완서류 패널 ----
+  document.getElementById('toggle-supplement').addEventListener('click', () => {
+    const panel = document.getElementById('supplement-panel');
+    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+  });
+
+  document.getElementById('supplement-upload-btn').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = '제출 중...';
+    setTimeout(() => {
+      document.getElementById('supplement-panel').style.display = 'none';
+      const badge = document.getElementById('app1-badge');
+      badge.textContent = '서류심사중 · 보완 제출완료';
+      badge.classList.remove('bg-light-warning');
+      badge.classList.add('bg-light-information');
+      const toggleBtn = document.getElementById('toggle-supplement');
+      toggleBtn.disabled = true;
+      toggleBtn.textContent = '보완 제출완료';
+      toast('보완 서류가 제출되었습니다. 담당자 재검토 후 다음 단계로 진행됩니다');
+    }, 800);
+  });
+
+  // ---- 캠코 관리자: 신청 접수 목록 / 심사 상세 ----
+  const ADMIN_APPLICATIONS = [
+    { id:'KAMCO-2026-04198', program:'자산매입 후 임대(S&LB)', company:'㈜한빛정밀', brn:'214-81-XXXXX', date:'2026-07-18', status:'서류심사중', badge:'bg-light-warning', note:'', docs:[
+      {name:'사업자등록증', ok:true}, {name:'최근 3개년 재무제표', ok:false}, {name:'자산·채권 명세서', ok:true}
+    ]},
+    { id:'KAMCO-2026-04231', program:'회생·워크아웃 기업 지원', company:'㈜한빛정밀', brn:'214-81-XXXXX', date:'2026-07-22', status:'현장실사/평가', badge:'outline-gray', note:'', docs:[
+      {name:'사업자등록증', ok:true}, {name:'자산·채권 명세서', ok:true}
+    ]},
+    { id:'KAMCO-2026-04176', program:'펀드 출·투자(기업지원펀드)', company:'㈜대한물류', brn:'128-86-XXXXX', date:'2026-07-10', status:'최종승인', badge:'bg-light-success', note:'승인 사유: 재무 건전성 및 사업 계획 적정 · 지원 조건: 30억 원 한도 출자', docs:[
+      {name:'사업자등록증', ok:true}, {name:'사업계획서', ok:true}
+    ]},
+    { id:'KAMCO-2026-04120', program:'담보부사채 발행지원', company:'㈜서진테크', brn:'305-81-XXXXX', date:'2026-06-29', status:'반려', badge:'bg-light-danger', note:'반려 사유: 담보 자산 감정가 미달', docs:[
+      {name:'사업자등록증', ok:true}, {name:'담보 감정평가서', ok:false}
+    ]},
+  ];
+  let currentAdminAppId = null;
+
+  function updateAdminStats(){
+    const pendingEl = document.getElementById('stat-pending');
+    if(!pendingEl) return;
+    pendingEl.textContent = ADMIN_APPLICATIONS.filter(a => a.status === '서류심사중' || a.status === '현장실사/평가').length;
+    document.getElementById('stat-supplement').textContent = ADMIN_APPLICATIONS.filter(a => a.note.indexOf('보완 요청') === 0).length;
+    document.getElementById('stat-approved').textContent = ADMIN_APPLICATIONS.filter(a => a.status === '최종승인').length;
+  }
+
+  function renderAdminApplications(){
+    const filter = document.getElementById('admin-filter-status').value;
+    const rows = ADMIN_APPLICATIONS.filter(a => !filter || a.status === filter);
+    document.getElementById('admin-app-table-body').innerHTML = rows.map(a =>
+      '<tr><td class="num">' + a.id + '</td><td>' + a.program + '</td><td>' + a.company + '</td><td class="num">' + a.date + '</td>' +
+      '<td><span class="krds-badge ' + a.badge + '">' + a.status + '</span></td>' +
+      '<td><button type="button" class="krds-btn tertiary small admin-review-btn" data-app-id="' + a.id + '">상세보기</button></td></tr>'
+    ).join('');
+    updateAdminStats();
+  }
+  document.getElementById('admin-filter-status').addEventListener('change', renderAdminApplications);
+  document.getElementById('admin-app-table-body').addEventListener('click', (e) => {
+    const btn = e.target.closest('.admin-review-btn');
+    if(!btn) return;
+    navigateTo('admin-review', {step: btn.dataset.appId.replace('KAMCO-2026-', '')});
+  });
+
+  function renderAdminReview(shortId){
+    const app = ADMIN_APPLICATIONS.find(a => a.id.endsWith(shortId || ''));
+    if(!app){ navigateTo('admin-applications'); return; }
+    currentAdminAppId = app.id;
+    document.getElementById('admin-review-program').textContent = app.program;
+    document.getElementById('admin-review-id').textContent = app.id;
+    document.getElementById('admin-review-date').textContent = app.date;
+    document.getElementById('admin-review-company').textContent = app.company;
+    document.getElementById('admin-review-brn').textContent = app.brn;
+    const badge = document.getElementById('admin-review-badge');
+    badge.textContent = app.status;
+    badge.className = 'krds-badge ' + app.badge;
+    const noteWrap = document.getElementById('admin-review-note-wrap');
+    if(app.note){ noteWrap.style.display = 'block'; document.getElementById('admin-review-note').textContent = app.note; }
+    else { noteWrap.style.display = 'none'; }
+    document.getElementById('admin-review-docs').innerHTML = app.docs.map(d =>
+      '<li class="doc-item"><div class="file-info"><div class="file-name">' + d.name + '</div><div class="btn-wrap"><span class="krds-badge ' + (d.ok ? 'bg-light-success' : 'bg-light-warning') + '">' + (d.ok ? '확인' : '미제출') + '</span></div></div></li>'
+    ).join('');
+    const terminal = app.status === '최종승인' || app.status === '반려';
+    document.getElementById('admin-review-actions').style.display = terminal ? 'none' : 'flex';
+    document.getElementById('admin-review-done-msg').style.display = terminal ? 'block' : 'none';
+  }
+
+  function findCurrentAdminApp(){ return ADMIN_APPLICATIONS.find(a => a.id === currentAdminAppId); }
+
+  document.getElementById('admin-supplement-confirm').addEventListener('click', () => {
+    const val = document.getElementById('admin-supplement-input').value.trim();
+    if(!val){ toast('요청 항목 및 사유를 입력하세요'); return; }
+    const app = findCurrentAdminApp();
+    if(app){ app.status = '서류심사중'; app.badge = 'bg-light-warning'; app.note = '보완 요청: ' + val; }
+    document.getElementById('admin-supplement-cancel').click();
+    renderAdminReview(currentAdminAppId.replace('KAMCO-2026-', ''));
+    toast('보완 요청이 발송되었습니다');
+  });
+
+  document.getElementById('admin-approve-confirm').addEventListener('click', () => {
+    const val = document.getElementById('admin-approve-input').value.trim();
+    if(!val){ toast('승인 사유 및 지원 조건을 입력하세요'); return; }
+    const app = findCurrentAdminApp();
+    if(app){ app.status = '최종승인'; app.badge = 'bg-light-success'; app.note = '승인 사유: ' + val; }
+    document.getElementById('admin-approve-cancel').click();
+    renderAdminReview(currentAdminAppId.replace('KAMCO-2026-', ''));
+    toast('신청이 승인되었습니다. 증명서가 자동 생성됩니다');
+  });
+
+  document.getElementById('admin-reject-confirm').addEventListener('click', () => {
+    const val = document.getElementById('admin-reject-input').value.trim();
+    if(!val){ toast('반려 사유를 입력하세요'); return; }
+    const app = findCurrentAdminApp();
+    if(app){ app.status = '반려'; app.badge = 'bg-light-danger'; app.note = '반려 사유: ' + val; }
+    document.getElementById('admin-reject-cancel').click();
+    renderAdminReview(currentAdminAppId.replace('KAMCO-2026-', ''));
+    toast('신청이 반려 처리되었습니다');
+  });
+
+  document.querySelectorAll('#btn-admin-supplement, #btn-admin-approve, #btn-admin-reject').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('admin-supplement-input').value = '';
+      document.getElementById('admin-approve-input').value = '';
+      document.getElementById('admin-reject-input').value = '';
+    });
+  });
+
+  renderAdminApplications();
+
+  // ---- 로그인 역할(Role) 상태 ----
+  const ROLE_PROFILES = {
+    company: { text:'이수민 재무담당 · ㈜한빛정밀' },
+    staff:   { text:'김민준 심사역 · 캠코 기업지원센터' },
+    admin:   { text:'박서연 마스터 관리자 · 캠코 본사' }
+  };
+  function setRole(role){
+    const profile = ROLE_PROFILES[role];
+    if(!profile) return;
+    document.getElementById('role-chip-text').textContent = profile.text;
+  }
+
+  // 기업 고객: 민간 간편인증 로그인
+  document.querySelectorAll('[data-role-login="company"]').forEach(btn => {
+    btn.addEventListener('click', () => setRole('company'));
+  });
+
+  // 캠코 관리자 로그인
+  document.getElementById('staff-login-btn').addEventListener('click', () => {
+    const id = document.getElementById('staff-id').value.trim();
+    const pw = document.getElementById('staff-pw').value.trim();
+    if(!id || !pw){ toast('사번과 비밀번호를 입력하세요'); return; }
+    setRole('staff');
+    toast('캠코 관리자로 로그인되었습니다');
+    navigateTo('admin-dashboard');
+  });
+
+  // 최고 관리자 로그인 (OTP 2단계 인증)
+  document.getElementById('admin-login-btn').addEventListener('click', () => {
+    const id = document.getElementById('admin-id').value.trim();
+    const pw = document.getElementById('admin-pw').value.trim();
+    const otp = document.getElementById('admin-otp').value.trim();
+    if(!id || !pw){ toast('관리자 ID와 비밀번호를 입력하세요'); return; }
+    if(!/^\d{6}$/.test(otp)){ toast('OTP 인증번호 6자리를 입력하세요'); return; }
+    setRole('admin');
+    toast('최고 관리자로 로그인되었습니다');
+    navigateTo('admin-dashboard');
+  });
+
+  // ---- 회원가입(기업 고객 전용) ----
+  let suPhoneVerified = false;
+  document.getElementById('su-send-otp').addEventListener('click', () => {
+    const phone = document.getElementById('su-phone').value.trim();
+    if(!phone){ toast('휴대폰번호를 입력하세요'); return; }
+    document.getElementById('su-otp-field').style.display = 'block';
+    toast('인증번호가 발송되었습니다 (예시: 123456)');
+  });
+  document.getElementById('su-verify-otp').addEventListener('click', () => {
+    const otp = document.getElementById('su-otp').value.trim();
+    if(!otp){ toast('인증번호를 입력하세요'); return; }
+    suPhoneVerified = true;
+    toast('휴대폰 인증이 완료되었습니다');
+    updateSignupSubmitState();
+  });
+
+  function updateSignupSubmitState(){
+    const termsOk = document.getElementById('su-agree-terms').checked;
+    const privacyOk = document.getElementById('su-agree-privacy').checked;
+    document.getElementById('su-submit').disabled = !(termsOk && privacyOk && suPhoneVerified);
+  }
+  document.getElementById('su-agree-terms').addEventListener('change', updateSignupSubmitState);
+  document.getElementById('su-agree-privacy').addEventListener('change', updateSignupSubmitState);
+
+  document.getElementById('su-submit').addEventListener('click', () => {
+    const name = document.getElementById('su-name').value.trim();
+    const email = document.getElementById('su-email').value.trim();
+    const pw = document.getElementById('su-pw').value;
+    const pw2 = document.getElementById('su-pw2').value;
+    if(!name || !email || !pw){ toast('이름, 이메일, 비밀번호를 입력하세요'); return; }
+    if(pw !== pw2){ toast('비밀번호가 일치하지 않습니다'); return; }
+    toast('가입이 완료되었습니다. 로그인해주세요');
+    navigateTo('login');
+  });
+
+  if(!location.hash){ history.replaceState(null, '', '#/home'); }
+  handleRoute();
+</script>
