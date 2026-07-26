@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@krds-mcp/krds-mcp": "^1.0.7"
+  }
+}
