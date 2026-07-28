@@ -30,3 +30,27 @@
 
 ## 검증 방법
 Browser 도구로 375px 뷰포트에서 `program-diagnosis`, `apply` Step 1, `vdr-viewer` 확인 — 가로 오버플로우 없음(`scrollWidth === innerWidth`), 텍스트/입력값 잘림 없음. 1023px·1280px에서 회귀 없는지 재확인.
+
+## 버그 3 — `.content-layout` 그리드 트랙이 버튼의 min-content로 인해 뷰포트보다 넓어짐 (메인, 온라인신청 3단계)
+- 근본 원인: `.content-layout{display:grid;grid-template-columns:1fr;...}` (`index.html:30`) — CSS 그리드는 `1fr` 트랙도 기본적으로 자식의 `min-content` 이하로 줄어들지 않는다(`minmax(auto,1fr)`과 동일). `.krds-btn`(벤더 컴포넌트)은 기본 `white-space:nowrap`이라 긴 한글 버튼 텍스트의 min-content 폭이 매우 커지고, 이 값이 그리드 트랙 자체를, 나아가 `.content-layout`(및 그 안의 모든 형제 블록)을 뷰포트보다 넓게 밀어낸다.
+- 실측 1 (메인 홈, 기본 글자크기): 375px 뷰포트에서 히어로의 "1분 만에 끝내는 기업 지원 자가진단 시작하기" CTA 버튼(`.hero .cta-row .krds-btn`, `index.html:369` 부근)이 그리드를 421.375px로 밀어 `scrollWidth 437 / clientWidth 375` = 62px 가로 오버플로우. `document.getElementById('content-layout')`의 computed `grid-template-columns`가 실제로 `"421.375px"`로 확인됨.
+- 실측 2 (온라인신청 3단계, 헤더 "글자크기: 크게" 접근성 옵션 적용 시): "법인 인증 및 공공 서류 한 번에 가져오기" 버튼(`#btn-mydata-collect`, `index.html:1566`, `style="width:fit-content;"` + nowrap)이 같은 방식으로 그리드를 밀어 `scrollWidth 450 / clientWidth 375` = 32~75px 오버플로우(그리드 수정만 적용 시에도 407로 남음 — 버튼 자체의 nowrap이 별도 원인이라 그리드 수정만으로는 해결되지 않음).
+- 수정 (브라우저에서 조합 테스트로 실제 해결 확인, `scrollWidth === clientWidth`):
+  1. 그리드 트랙에 `minmax(0,1fr)` 적용 — 구조적 근본 수정, 그리드가 콘텐츠 때문에 뷰포트보다 커지는 것을 원천 차단
+     - `index.html:30` `.content-layout{grid-template-columns:1fr;...}` → `grid-template-columns:minmax(0,1fr);`
+     - `index.html:31` `.content-layout.has-lnb{grid-template-columns:24rem 1fr;...}` → `grid-template-columns:24rem minmax(0,1fr);`
+     - `index.html:37` (1023px 미디어쿼리 안) `.content-layout.has-lnb{grid-template-columns:1fr;}` → `grid-template-columns:minmax(0,1fr);`
+  2. 그리드 트랙이 줄어들면 내부의 nowrap 버튼 자체가 자기 컨테이너보다 넓어지는 문제가 남으므로, 767px 이하에서 버튼 두 곳에 `white-space:normal` 추가
+     ```css
+     @media (max-width:767px){
+       .hero .cta-row .krds-btn{white-space:normal;}
+       #btn-mydata-collect{white-space:normal;}
+     }
+     ```
+- 참고: `.hero .cta-row`는 홈 화면에서 게스트/기업/투자자/협약기관 대시보드 4곳 모두 동일 클래스를 공유하므로(`index.html:369,424,490,543`) 이 CSS 규칙 하나로 4곳 모두 커버된다.
+
+## Work 분할 (버그 3, 단일 서브에이전트 — 그리드 트랙 수정과 버튼 수정이 서로 의존적이라 분리 시 이점 없음)
+- **서브에이전트 C**: `index.html:30,31,37`의 `grid-template-columns` 3곳 수정 + 새 767px 미디어쿼리 규칙(버튼 2곳 `white-space:normal`) 추가. 마크업 변경 없음, `<style>` 블록만 수정.
+
+## 검증 방법 (버그 3)
+Browser 도구로 375px에서 메인 홈 확인(`scrollWidth === clientWidth`, CTA 버튼 텍스트 줄바꿈되어 잘리지 않음), 온라인신청 3단계에서 기본 글자크기 및 "글자크기: 크게" 상태 모두 확인(마이데이터 버튼 텍스트 줄바꿈, 오버플로우 없음). 1280px 데스크톱에서 기존 레이아웃(1줄 버튼, 넓은 그리드) 회귀 없는지 재확인.
