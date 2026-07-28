@@ -48,11 +48,12 @@
     .dash-head{gap:1.6rem;}
   }
   @media (max-width:767px){ .grid-2,.grid-3{grid-template-columns:1fr;} }
+  @media (max-width:767px){ .form-col-group{grid-template-columns:1fr !important;} }
 
   /* home 히어로 */
   .hero{background:linear-gradient(155deg, var(--ci-blue-2), var(--krds-color-light-primary-60));color:#fff;border-radius:var(--krds-radius-medium3);padding:4rem 3.6rem;display:flex;flex-direction:column;gap:1.4rem;}
-  .hero h1{color:#fff;font-size:3.2rem;line-height:1.25;max-width:20ch;}
-  .hero p{color:rgba(255,255,255,.82);max-width:56ch;font-size:1.5rem;line-height:1.6;}
+  .hero h1{color:#fff;font-size:3.2rem;line-height:1.25;max-width:40ch;}
+  .hero p{color:rgba(255,255,255,.82);max-width:70ch;font-size:1.5rem;line-height:1.6;}
   .hero .cta-row{display:flex;gap:1rem;margin-top:.6rem;flex-wrap:wrap;}
 
   /* 프로세스/흐름 다이어그램(정적 설명 도해 — KRDS 명명 컴포넌트 아님) */
@@ -80,6 +81,7 @@
   .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4rem;}
   @media (max-width:1023px){ .grid-4{grid-template-columns:repeat(2,1fr);} }
   @media (max-width:767px){ .grid-4{grid-template-columns:1fr;} }
+  @media (max-width:767px){ .vdr-layout{grid-template-columns:1fr !important;} }
 
   /* 메인 홈(로그인 전/후) 및 로그인 후 권한별 대시보드 전용 시각화 보조 스타일 */
   .dash-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:3rem;margin-bottom:2rem;padding-bottom:1.6rem;border-bottom:1px solid var(--krds-light-color-border-default);}
@@ -358,8 +360,8 @@
       <!-- 로그인 전/후 공통 메인 홈 (상단 배너는 로그인 상태와 무관하게 항상 노출) -->
       <div id="home-content" class="stack" style="gap:2.4rem;">
         <div class="hero">
-          <h1>위기의 기업에 재도약의 기회를, 민간 자본에 안정적 투자를</h1>
-          <p>맞춤형 진단부터 온라인 신청, 투자자 매칭, 공지사항까지 — 중소·중견기업 지원 제도를 하나의 사이트에서 이용할 수 있습니다.</p>
+          <h1>온라인 플랫폼의 신속한 정보 매칭과전국 11개 혁신지원센터의 오프라인 상담을 동시에!</h1>
+          <p>회원제로 안전하게 관리되는 투자 정보 인프라로기업과 투자자 모두에게 최적의 솔루션을 제공합니다.</p>
           <div class="cta-row">
             <button type="button" class="krds-btn primary" data-goto="program-diagnosis">1분 만에 끝내는 기업 지원 자가진단 시작하기</button>
             <button type="button" class="krds-btn secondary on" data-goto="program-overview">기업지원 프로그램 한눈에 보기</button>
@@ -2019,7 +2021,7 @@
       <!-- [연동] 조회: 문서 폴더 구조(Tree) → VDR 디렉토리/파일 목록 API (외부/내부, VDR 솔루션 API) — 접속자의 권한 등급에 따라 열람 가능한 폴더/파일 트리 구조 반환 -->
       <!-- [연동] 보안: 동적 워터마크 정보(계정 ID·접속 IP·접속 일시, 자동 수집) → 동적 워터마크 생성 모듈 (외부, 보안 DRM 솔루션) — 뷰어 상단에 투명 오버레이로 실시간 연동 -->
       <!-- [연동] 보안: 열람 이력(파일 ID·열람 시간·체류 시간·페이지 이동, 자동 트래킹) → VDR 감사 로그(Audit Log) API (내부/외부, BO 감사 서버) — 실시간 전송 저장 -->
-      <div class="box box-pad" style="display:grid;grid-template-columns:26rem 1fr;gap:2rem;align-items:start;">
+      <div class="box box-pad vdr-layout" style="display:grid;grid-template-columns:26rem 1fr;gap:2rem;align-items:start;">
         <nav aria-label="문서 폴더 구조">
           <ul class="stack" id="vdr-doc-tree" style="gap:.2rem;list-style:none;">
             <li style="font-weight:700;font-size:1.3rem;padding:.6rem .4rem;color:var(--krds-light-color-text-subtle);">01. 법인 및 주주 현황</li>
