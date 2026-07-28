@@ -1,0 +1,66 @@
+flowchart TD
+
+    Start(["회원 방문"]) --> Type{"회원유형 선택<br/>[화면0]"}
+    Type -->|"법인/개인사업자"| BizNo["사업자등록번호 입력<br/>[화면1]"]
+    Type -->|"개인투자자"| PassOnly["본인인증 PASS/인증서<br/>[화면1]"]
+
+    BizNo --> NTS[["국세청 홈택스 API<br/>사업자등록상태 진위확인"]]
+    NTS --> StatusCheck{"계속사업자?"}
+    StatusCheck -->|"휴/폐업"| Blocked["진행 차단<br/>사유 안내 + 고객센터 연결"]
+    StatusCheck -->|"계속사업자"| RepAuth["대표자 본인인증<br/>PASS/공동인증서"]
+    PassOnly --> RepAuth
+
+    RepAuth --> Consent["정보연계 동의<br/>마이데이터 + 행정정보 공동이용<br/>[화면2]"]
+
+    Consent --> Gov24[["정부24 행정정보 공동이용 API<br/>법인등기부등본/사업자등록증명원"]]
+    Consent --> MyData[["공공 마이데이터 종합포털 API<br/>국세완납증명/4대보험 이력"]]
+
+    Gov24 --> AutoFill["행정정보 자동조회 확인<br/>ReadonlyDataCard (읽기전용)<br/>[화면3]"]
+    MyData --> AutoFill
+
+    AutoFill --> AddInfo["부가정보 입력<br/>담당자 연락처/정산계좌<br/>[화면4]"]
+    AddInfo --> Kftc[["금융결제원 API<br/>계좌실명조회"]]
+    Kftc --> SignupConfirm["최종확인 및 제출<br/>[화면5]"]
+    SignupConfirm --> Snapshot[("AdminDataSnapshot<br/>MyDataConsentLog 저장")]
+    Snapshot --> SignupResult["가입심사 결과 확인<br/>[화면6]"]
+
+    SignupResult --> LoginDone(["로그인 완료 (기존/신규 공통)"])
+
+    LoginDone --> MatchScreen["맞춤 매칭 화면 진입<br/>[프로그램 화면1]"]
+    MatchScreen --> MatchEngine[["온기업 매칭엔진 (내부 API)<br/>AdminDataSnapshot 기반<br/>EligibilityRule 자동 대조"]]
+    MatchEngine --> MatchResult{"매칭 결과 존재?"}
+
+    MatchResult -->|"0건"| EmptyState["빈 상태 노출<br/>관심분야 알림 설정 유도"]
+    MatchResult -->|"N건"| MatchCards["매칭 프로그램 카드 목록<br/>MatchScoreBadge"]
+
+    EmptyState --> Bookmark["관심 프로그램 찜<br/>[프로그램 화면6]"]
+    MatchCards --> ProgramDetail["프로그램 상세 확인<br/>자격충족 배지 + 매칭 근거<br/>[프로그램 화면3]"]
+    Bookmark --> ProgramList["전체 프로그램 탐색<br/>필터링·정렬<br/>[프로그램 화면2]"]
+    ProgramList --> ProgramDetail
+
+    ProgramDetail --> ApplyDecision{"신청 가능?"}
+    ApplyDecision -->|"자격 미충족/마감"| DeadEnd["신청 버튼 비활성화<br/>사유 명시 + 유사 프로그램 추천"]
+    ApplyDecision -->|"가능"| ApplyForm["프로그램 신청<br/>[프로그램 화면4]"]
+
+    ApplyForm --> Prefill["ApplicationSnapshot 자동반영<br/>ReadonlyDataCard 재사용"]
+    Prefill --> ExtraInput["프로그램 고유 항목 입력<br/>이전 입력값 불러오기 옵션"]
+    ExtraInput --> ApplyConfirm["신청 최종확인 및 제출"]
+    ApplyConfirm --> AppDB[("Application<br/>ApplicationSnapshot 저장")]
+
+    AppDB --> MyPage["마이페이지 신청이력<br/>[프로그램 화면5]"]
+    MyPage --> StatusTimeline["ApplicationStatusTimeline<br/>접수 → 심사중 → 승인/반려"]
+    StatusTimeline --> NeedFix{"보완요청/반려?"}
+    NeedFix -->|"Yes"| ExtraInput
+    NeedFix -->|"No"| Done(["신청 완료"])
+
+    classDef api fill:#fff3cd,stroke:#c9a227,stroke-width:1px,color:#5c4b00;
+    classDef data fill:#e2f0ff,stroke:#1a6bb8,stroke-width:1px,color:#0d3a63;
+    classDef decision fill:#f5f5f5,stroke:#888,stroke-width:1px,color:#333;
+    classDef terminal fill:#e8f8ec,stroke:#2e8b57,stroke-width:1px,color:#1c5c37;
+    classDef block fill:#fde2e2,stroke:#c0392b,stroke-width:1px,color:#7a231a;
+
+    class NTS,Gov24,MyData,Kftc,MatchEngine api;
+    class Snapshot,AppDB data;
+    class StatusCheck,MatchResult,ApplyDecision,NeedFix,Type decision;
+    class Start,LoginDone,Done terminal;
+    class Blocked,DeadEnd block;
