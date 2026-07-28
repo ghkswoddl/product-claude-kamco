@@ -23,13 +23,14 @@
   .screen{padding:3rem 0 6rem;display:none;}
   .screen.active{display:block;}
   .screen-head{margin-bottom:2.2rem;max-width:64rem;}
-  .screen-head .eyebrow, .dash-head .eyebrow{font-size:1.2rem;color:var(--krds-light-color-text-primary);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
+  .screen-head .eyebrow{font-size:1.2rem;color:var(--krds-light-color-text-primary);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
+  .dash-head .home-dash-title{font-size:1.8rem;color:var(--krds-light-color-text-primary);font-weight:700;margin:0;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
   .screen-head p{margin-top:.8rem;font-size:1.6rem;font-weight:400;color:var(--krds-light-color-text-subtle);max-width:60ch;line-height:1.6;}
 
   .content-layout{display:grid;grid-template-columns:1fr;max-width:1248px;margin:0 auto;padding:0 24px;box-sizing:border-box;}
   .content-layout.has-lnb{grid-template-columns:24rem 1fr;gap:3.6rem;align-items:start;}
   .lnb-wrap{display:none;}
-  .content-layout.has-lnb .lnb-wrap{display:block;position:sticky;top:8rem;align-self:start;padding:2.4rem 0 4rem;}
+  .content-layout.has-lnb .lnb-wrap{display:block;position:sticky;top:8rem;align-self:start;}
   /* KRDS 컨텐츠 패딩 반응형 규칙(--krds-contents-padding-x)과 동일한 1024px 기준을 따른다 */
   @media (max-width:1023px){
     .content-layout{padding:0 16px;}
@@ -51,10 +52,11 @@
   @media (max-width:767px){ .form-col-group{grid-template-columns:1fr !important;} }
 
   /* home 히어로 */
-  .hero{background:linear-gradient(155deg, var(--ci-blue-2), var(--krds-color-light-primary-60));color:#fff;border-radius:var(--krds-radius-medium3);padding:4rem 3.6rem;display:flex;flex-direction:column;gap:1.4rem;}
-  .hero h1{color:#fff;font-size:3.2rem;line-height:1.25;max-width:40ch;}
-  .hero p{color:rgba(255,255,255,.82);max-width:70ch;font-size:1.5rem;line-height:1.6;}
+  .hero{background:linear-gradient(100deg, rgba(10,30,70,.88) 0%, rgba(10,30,70,.72) 38%, rgba(10,30,70,.32) 68%, rgba(10,30,70,.12) 100%), url('main_banner.png') center/cover no-repeat, linear-gradient(155deg, var(--ci-blue-2), var(--krds-color-light-primary-60));color:#fff;border-radius:var(--krds-radius-medium3);padding:4rem 3.6rem;display:flex;flex-direction:column;gap:1.4rem;}
+  .hero h1{color:#fff;font-size:3.2rem;line-height:1.25;max-width:30ch;text-shadow:0 2px 10px rgba(0,0,0,.35);}
+  .hero p{color:rgba(255,255,255,.92);max-width:70ch;font-size:1.5rem;line-height:1.6;text-shadow:0 1px 6px rgba(0,0,0,.3);}
   .hero .cta-row{display:flex;gap:1rem;margin-top:.6rem;flex-wrap:wrap;}
+  .hero .cta-row .krds-btn{box-shadow:0 2px 10px rgba(0,0,0,.25);}
 
   /* 프로세스/흐름 다이어그램(정적 설명 도해 — KRDS 명명 컴포넌트 아님) */
   .process-row{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;}
@@ -84,7 +86,7 @@
   @media (max-width:767px){ .vdr-layout{grid-template-columns:1fr !important;} }
 
   /* 메인 홈(로그인 전/후) 및 로그인 후 권한별 대시보드 전용 시각화 보조 스타일 */
-  .dash-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:3rem;margin-bottom:2rem;padding-bottom:1.6rem;border-bottom:1px solid var(--krds-light-color-border-default);}
+  .dash-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:3rem;margin-bottom:2rem;}
   .bar-chart-row{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;}
   .bar-chart-row:last-child{margin-bottom:0;}
   .bar-chart-label{flex:0 0 11rem;font-size:1.3rem;color:var(--krds-light-color-text-subtle);}
@@ -93,6 +95,7 @@
   .bar-chart-value{flex:0 0 4.4rem;text-align:right;font-size:1.3rem;font-weight:700;}
   .gauge-track{width:100%;height:1.2rem;background:var(--krds-light-color-background-alternative);border-radius:99px;overflow:hidden;}
   .gauge-fill{height:100%;border-radius:99px;background:linear-gradient(90deg, var(--ci-blue-1), var(--krds-color-light-primary-60));}
+  .gauge-fill.orange{background:linear-gradient(90deg, #F5821F, #FDB44B);}
   .dday-chip{display:inline-flex;align-items:center;padding:.3rem 1rem;border-radius:99px;font-size:1.2rem;font-weight:700;background:var(--krds-light-color-surface-danger-subtler);color:var(--krds-light-color-text-danger);}
   .donut-chart{width:14rem;height:14rem;border-radius:50%;position:relative;flex:none;}
   .donut-chart::after{content:"";position:absolute;top:20%;left:20%;width:60%;height:60%;border-radius:50%;background:var(--krds-light-color-surface-white);}
@@ -425,7 +428,7 @@
 
         <div class="dash-head">
           <div>
-            <div class="eyebrow">(주)한국정밀기계 <span class="caption">기업회원 · 사업자번호 120-81-XXXXX</span></div>
+            <h3 class="home-dash-title">(주)한국정밀기계 <span class="caption">기업회원 · 사업자번호 120-81-XXXXX</span></h3>
           </div>
           <div class="row">
             <button type="button" class="krds-btn secondary small" data-goto="mypage-status">심사 진행 현황 전체보기</button>
@@ -491,7 +494,7 @@
 
         <div class="dash-head">
           <div>
-            <div class="eyebrow">OO자산운용 <span class="caption">투자자회원 · 전문투자자 · 김투자 심사역</span></div>
+            <h3 class="home-dash-title">OO자산운용 <span class="caption">투자자회원 · 전문투자자 · 김투자 심사역</span></h3>
           </div>
           <div class="row">
             <button type="button" class="krds-btn secondary small" data-goto="investor-companies">기업 탐색</button>
@@ -512,9 +515,12 @@
             <div class="bar-chart-row"><span class="bar-chart-label">제조업(S&amp;LB)</span><div class="bar-chart-track"><div class="bar-chart-fill" style="width:100%;"></div></div><span class="bar-chart-value">8건</span></div>
             <div class="bar-chart-row"><span class="bar-chart-label">바이오/제약</span><div class="bar-chart-track"><div class="bar-chart-fill" style="width:50%;"></div></div><span class="bar-chart-value">4건</span></div>
             <div class="bar-chart-row"><span class="bar-chart-label">IT/소프트웨어</span><div class="bar-chart-track"><div class="bar-chart-fill" style="width:25%;"></div></div><span class="bar-chart-value">2건</span></div>
-            <div class="stack" style="margin-top:1.4rem;gap:.5rem;">
-              <div class="row" style="justify-content:space-between;"><span class="caption">(주)한국정밀기계 투자 매칭 스코어</span><b class="num">85%</b></div>
-              <div class="gauge-track"><div class="gauge-fill" style="width:85%;"></div></div>
+            <div class="stack" style="margin-top:1.4rem;gap:.6rem;">
+              <span class="caption">(주)한국정밀기계 투자 매칭 스코어</span>
+              <div class="row" style="gap:1rem;">
+                <div class="gauge-track" style="flex:1;"><div class="gauge-fill orange" style="width:85%;"></div></div>
+                <b class="num">85%</b>
+              </div>
             </div>
           </div>
           <div class="box box-pad">
@@ -541,7 +547,7 @@
 
         <div class="dash-head">
           <div>
-            <div class="eyebrow">삼경회계법인 <span class="caption">협약기관회원 · 기업 가치평가 수행기관 · 이삼경 회계사</span></div>
+            <h3 class="home-dash-title">삼경회계법인 <span class="caption">협약기관회원 · 기업 가치평가 수행기관 · 이삼경 회계사</span></h3>
           </div>
           <div class="row">
             <button type="button" class="krds-btn primary small" data-goto="mypage-docs">평가보고서 제출</button>
@@ -569,8 +575,7 @@
             <li><span><i class="step">4</i><span class="step-tit">최종보고서 제출</span></span></li>
             <li><span><i class="step">5</i><span class="step-tit">승인/정산</span></span></li>
           </ol>
-          <div class="gauge-track" style="margin-top:1.4rem;"><div class="gauge-fill" style="width:60%;"></div></div>
-          <div class="row" style="margin-top:1.2rem;justify-content:flex-end;">
+          <div class="row" style="margin-top:1.4rem;justify-content:flex-end;">
             <button type="button" class="krds-btn tertiary small" data-goto="mypage-docs">현장실사 결과 등록</button>
             <button type="button" class="krds-btn tertiary small" data-goto="mypage-docs">평가보고서 PDF 제출</button>
           </div>
@@ -3459,7 +3464,7 @@
       document.getElementById(id).style.display = 'none';
     });
     if(HOME_DASHBOARD_IDS[role]){
-      document.getElementById(HOME_DASHBOARD_IDS[role]).style.display = 'block';
+      document.getElementById(HOME_DASHBOARD_IDS[role]).style.display = 'flex';
     }
   }
 
