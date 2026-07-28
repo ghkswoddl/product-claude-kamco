@@ -54,3 +54,27 @@ Browser 도구로 375px 뷰포트에서 `program-diagnosis`, `apply` Step 1, `vd
 
 ## 검증 방법 (버그 3)
 Browser 도구로 375px에서 메인 홈 확인(`scrollWidth === clientWidth`, CTA 버튼 텍스트 줄바꿈되어 잘리지 않음), 온라인신청 3단계에서 기본 글자크기 및 "글자크기: 크게" 상태 모두 확인(마이데이터 버튼 텍스트 줄바꿈, 오버플로우 없음). 1280px 데스크톱에서 기존 레이아웃(1줄 버튼, 넓은 그리드) 회귀 없는지 재확인.
+
+## 기능 4 — 모바일 햄버거 메뉴: 사이트맵 제거 + 마이메뉴 탭 신설
+사용자 요청(버그 아님, 기능 변경): (1) 모바일 전체메뉴(`#mobile-nav`) 상단의 "사이트맵" 버튼 제거, (2) 로그인 시 사용자명 아래 가로 스크롤 링크 줄(`#mobile-mygov-links`)로 노출되던 마이페이지/관리자 메뉴를 없애고, 좌측 1depth 탭 목록(기업지원 프로그램/투자자 라운지/국유증권 가상데이터룸/고객마당/센터소개) 맨 아래에 "마이메뉴" 탭을 새로 만들어 그 안으로 이동.
+
+### 1) 사이트맵 제거
+- 위치: `index.html:320-324` (`.gnb-header` 안 `.gnb-utils` 블록, "사이트맵" 버튼)
+- `.gnb-utils` 클래스는 이 한 곳에서만 쓰이므로(데스크톱 유틸리티 바 사이트맵 버튼(`index.html:255`)·푸터 사이트맵 링크(`index.html:2393`)·사이트맵 모달(`#sitemap-overlay`) 자체는 별개 요소라 영향 없음) 이 블록 전체 삭제.
+
+### 2) 마이메뉴 탭
+- 근본 제약: 벤더 스크립트 `krds_mainMenuMobile.init()`(페이지 로드 시 1회 실행, `krds.min.js`)이 `.gnb-main-trigger` 탭 각각에 클릭 이벤트를 직접 바인딩한다. 로그인 후 탭 목록 HTML을 새로 갈아끼우면(innerHTML 재생성) 새 탭에는 이벤트가 안 걸리고, `init()`을 재호출하면 "전체메뉴" 열기 버튼 등 기존 리스너가 중복 바인딩되는 부작용이 생긴다.
+- 해결: 페이지 로드 시 정적 IA 5개 탭 뒤에 "마이메뉴" 탭(`<li id="mobile-mymenu-tab" style="display:none;">`)과 패널(`<div id="mGnb-anchor-mymenu" style="display:none;">`)을 처음부터 DOM에 함께 만들어 두되 둘 다 숨겨두고, 로그인/로그아웃 시 두 요소의 `display`만 토글한다(기존 `#mobile-mygov`/`#mobile-guest-login` 토글 패턴과 동일).
+- 수정 대상:
+  - `index.html:2778-2787` 부근 (`gnbMobileTabs.innerHTML = ...`, `gnbMobilePanels.innerHTML = ...`): IA 기반 목록 뒤에 마이메뉴 탭/패널 1개씩 추가로 이어붙인다.
+  - `index.html:3476-3484` 부근 `renderMyGovMenu(role)`: 기존 `#mygov-menu-list`(PC 드롭다운) 채우던 것과 같은 데이터로 `#mobile-mymenu-list`(신규 `<ul>`, 마이메뉴 패널 안)도 채운다. `#mobile-mygov-links`를 채우던 줄은 제거.
+  - `index.html:3494-3499` `loginAs()`: `#mobile-mygov-links`를 보이던 줄 → `#mobile-mymenu-tab`, `#mGnb-anchor-mymenu` 보이기로 교체.
+  - `index.html:3518-3519` `logout()`: `#mobile-mygov-links`를 숨기던 줄 → `#mobile-mymenu-tab`, `#mGnb-anchor-mymenu` 숨기기로 교체.
+  - `index.html:333` 마크업의 `<div class="row" id="mobile-mygov-links" ...></div>` 삭제(더 이상 사용 안 함).
+  - `index.html:133` 근처 `#mobile-mygov-links a{...}` CSS 규칙 삭제(대상 요소가 없어지므로 죽은 코드).
+
+## Work 분할 (기능 4, 단일 서브에이전트 — 마크업/JS 변경이 서로 강하게 연결되어 있어 분리 시 이점 없음)
+- **서브에이전트 E**: 위 사이트맵 제거 1곳 + 마이메뉴 탭 관련 markup 2곳/JS 4곳/CSS 1곳 수정.
+
+## 검증 방법 (기능 4)
+Browser 도구로 375px에서 전체메뉴 열어 사이트맵 버튼이 없는지 확인. 로그인 전: 좌측 탭에 마이메뉴가 안 보이는지, 스크롤해도 빈 마이메뉴 섹션이 노출되지 않는지 확인. 기업/투자자/협약기관/관리자 각 역할로 로그인 후: 좌측 탭 맨 아래 마이메뉴 탭이 나타나는지, 클릭 시 해당 역할의 메뉴(마이페이지 3개 또는 관리자 2개)로 정상 스크롤/이동되는지, 로그아웃 시 다시 숨겨지는지 확인. PC 화면(MyGOV 드롭다운)에 회귀 없는지 확인.

@@ -129,9 +129,6 @@
     color:var(--krds-light-color-text-subtle);font-size:1.25rem;
   }
 
-  /* MyGOV 모바일 바로가기 메뉴: krds.min.css 기본 링크 줄바꿈 규칙보다 우선해 한 줄로 표기 */
-  #mobile-mygov-links a{display:inline-flex;white-space:nowrap;flex:none;}
-
   /* MyGOV 데스크탑 드롭다운: krds.min.css 기본 .drop-menu 폭(130px)이 한글 메뉴명 기준으로 좁아 줄바꿈되므로 폭을 넓혀 한 줄로 표기 */
   #nav-mygov-wrap .drop-menu{width:22rem;min-width:22rem;}
   #mygov-menu-list .item-link{white-space:nowrap;}
@@ -317,11 +314,6 @@
     <div id="mobile-nav" class="krds-main-menu-mobile">
       <div class="gnb-wrap">
         <div class="gnb-header">
-          <div class="gnb-utils">
-            <ul class="utility-list">
-              <li><button type="button" class="krds-btn xsmall text open-modal" data-target="sitemap-overlay">사이트맵</button></li>
-            </ul>
-          </div>
           <div class="gnb-login" id="mobile-guest-login">
             <a href="#/login" class="krds-btn large text"><i class="svg-icon ico-log"></i> 로그인</a>
             <a href="#/signup" class="krds-btn large text">회원가입</a>
@@ -330,7 +322,6 @@
             <span class="user" id="mobile-mygov-username">-</span>
             <button type="button" class="krds-btn large text" id="mobile-logout-btn"><i class="svg-icon ico-logout"></i> 로그아웃</button>
           </div>
-          <div class="row" id="mobile-mygov-links" style="display:none;gap:.6rem;padding-bottom:1.2rem;flex-wrap:nowrap;overflow-x:auto;"></div>
         </div>
         <div class="gnb-body">
           <div class="gnb-menu" id="gnb-menu-mobile">
@@ -2778,13 +2769,15 @@
   // ---- GNB(모바일) : 1Depth 탭 + 2Depth 목록(그룹 없이 바로 나열) ----
   const gnbMobileTabs = document.getElementById('gnb-mobile-tabs');
   const gnbMobilePanels = document.getElementById('gnb-mobile-panels');
-  gnbMobileTabs.innerHTML = IA.map((d1, i) => '<li><a href="#mGnb-anchor' + i + '" class="gnb-main-trigger">' + d1.d1 + '</a></li>').join('');
+  gnbMobileTabs.innerHTML = IA.map((d1, i) => '<li><a href="#mGnb-anchor' + i + '" class="gnb-main-trigger">' + d1.d1 + '</a></li>').join('')
+    + '<li id="mobile-mymenu-tab" style="display:none;"><a href="#mGnb-anchor-mymenu" class="gnb-main-trigger">마이메뉴</a></li>';
   gnbMobilePanels.innerHTML = IA.map((d1, i) =>
     '<div class="gnb-sub-list" id="mGnb-anchor' + i + '">' +
       '<h2 class="sub-title">' + d1.d1 + '</h2>' +
       '<ul>' + d1.items.map(it => '<li><a href="#/' + it.id + '" class="gnb-sub-trigger">' + it.label + '</a></li>').join('') + '</ul>' +
     '</div>'
-  ).join('');
+  ).join('')
+    + '<div class="gnb-sub-list" id="mGnb-anchor-mymenu" style="display:none;"><h2 class="sub-title">마이메뉴</h2><ul id="mobile-mymenu-list"></ul></div>';
 
   // ---- 사이트맵 (krds-modal의 open-modal/close-modal 트리거를 krds_modal.init()이 자동 연결) ----
   const sitemapGrid = document.getElementById('sitemap-grid');
@@ -3478,8 +3471,8 @@
     const group = IA.find(d1 => d1.d1 === profile.mygovGroup) || AUTH_IA.find(d1 => d1.d1 === profile.mygovGroup);
     const linksHTML = group.items.map(it => '<li><a href="#/' + it.id + '" class="item-link">' + it.label + '</a></li>').join('');
     document.getElementById('mygov-menu-list').innerHTML = linksHTML;
-    document.getElementById('mobile-mygov-links').innerHTML = group.items.map(it =>
-      '<a href="#/' + it.id + '" class="krds-btn text small">' + it.label + '</a>'
+    document.getElementById('mobile-mymenu-list').innerHTML = group.items.map(it =>
+      '<li><a href="#/' + it.id + '" class="gnb-sub-trigger">' + it.label + '</a></li>'
     ).join('');
   }
 
@@ -3496,7 +3489,8 @@
     document.getElementById('nav-mygov-wrap').style.display = '';
     document.getElementById('mobile-guest-login').style.display = 'none';
     document.getElementById('mobile-mygov').style.display = '';
-    document.getElementById('mobile-mygov-links').style.display = 'flex';
+    document.getElementById('mobile-mymenu-tab').style.display = '';
+    document.getElementById('mGnb-anchor-mymenu').style.display = '';
     renderHomeDashboard(role);
     if(pendingRedirect){
       const target = pendingRedirect;
@@ -3516,7 +3510,8 @@
     document.getElementById('nav-mygov-wrap').style.display = 'none';
     document.getElementById('mobile-guest-login').style.display = '';
     document.getElementById('mobile-mygov').style.display = 'none';
-    document.getElementById('mobile-mygov-links').style.display = 'none';
+    document.getElementById('mobile-mymenu-tab').style.display = 'none';
+    document.getElementById('mGnb-anchor-mymenu').style.display = 'none';
     renderHomeDashboard(null);
     toast('로그아웃되었습니다');
     navigateTo('home');

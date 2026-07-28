@@ -163,3 +163,86 @@ None found in the fix itself. Two notes, not defects:
 ### Overall verdict
 
 **Ready to commit.** All 4 parts of the `.content-layout` / `.krds-btn` white-space fix are present in source and verified working: home hero CTA and the apply Step 3 mydata-collect button no longer overflow at 375px (confirmed both at default and at xlg/zoom-1.3 font scale, matching the task's documented "375 = fully fixed" target), and desktop (1280px) rendering — single-line buttons and the `has-lnb` two-column sidebar layout — is unchanged. A second `.hero .cta-row` instance (company dashboard) was spot-checked and behaves identically to the guest home.
+
+## Mobile hamburger menu: sitemap removal + 마이메뉴 tab
+
+### Scope confirmed in source
+
+- `index.html` line 252, desktop `.header-utility` sitemap button (`<button ... data-target="sitemap-overlay">사이트맵</button>`) — **untouched**, still present outside `#mobile-nav`.
+- `index.html` line 2384, footer sitemap link (`<button ... data-target="sitemap-overlay">사이트맵 <i class="svg-icon ico-angle right"></i></button>`) — **untouched**.
+- `index.html` lines 2406-2419+, `#sitemap-overlay` modal itself and its `#sitemap-grid` population logic (lines 2782-2792) — **untouched**.
+- `index.html` lines 314-329, `#mobile-nav` → `.gnb-header`: no `사이트맵`/`open-modal`/`data-target="sitemap-overlay"` element remains inside it; `.gnb-login` blocks are only `#mobile-guest-login` (로그인/회원가입 links) and `#mobile-mygov` (username + 로그아웃), confirming the old `#mobile-mygov-links` quick-link row is gone.
+- `index.html` line 2772-2773: `gnbMobileTabs.innerHTML = IA.map(...) + '<li id="mobile-mymenu-tab" style="display:none;"><a href="#mGnb-anchor-mymenu" class="gnb-main-trigger">마이메뉴</a></li>'` — 6th `<li>` appended after the 5 IA-driven tabs.
+- `index.html` line 2780: matching hidden panel `<div class="gnb-sub-list" id="mGnb-anchor-mymenu" style="display:none;"><h2 class="sub-title">마이메뉴</h2><ul id="mobile-mymenu-list"></ul></div>` appended after the 5 IA panels.
+- `index.html` lines 3469-3477, `renderMyGovMenu(role)`: populates both `#mygov-menu-list` (desktop) and `#mobile-mymenu-list` (mobile) from the same `group.items` (looked up via `profile.mygovGroup` in `ROLE_PROFILES`, lines 3443-3449) — single shared data source, as intended.
+- `index.html` lines 3479-3502, `loginAs(role)`: sets `#mobile-mymenu-tab` and `#mGnb-anchor-mymenu` `style.display = ''` on login.
+- `index.html` lines 3504-3518, `logout()`: sets both back to `style.display = 'none'`.
+
+All parts of the described change are present exactly as described.
+
+### What was tested
+
+Tool: `mcp__Claude_Browser` against `file:///C:/Users/tagi7/Desktop/claude_exam/product-claude-kamco/index.html`.
+
+**Tab-cap / stale-tab environment note:** the browser tool session already had 9 tabs open (the cap), so a brand-new tab could not be created this round (`tabs_create` errored with "tab cap reached"). `navigate()` calls to the file:// URL on both the active tab and an inactive one also errored ("may be missing, unreadable, or the user declined access") despite the file existing on disk. Falling back to `location.reload()` via `javascript_tool` on the existing active tab (`tab-19`) worked, and a DOM check both before and immediately after the reload confirmed the tab already reflected the post-edit markup (`#mobile-mymenu-tab` and `#mGnb-anchor-mymenu` present, `#mobile-mygov-links` absent) — so the reload was a safety measure to guarantee fresh JS state (fresh `isLoggedIn=false`), not a fix for stale markup. All testing below was done in this reloaded tab.
+
+**Click-registration:** per the guidance and prior reviews' findings, all interactions (hamburger open, login-role-card clicks, tab clicks, mymenu link clicks, logout, desktop MyGOV dropdown) were driven via `element.click()` calls through `javascript_tool`, which fires the real listener a trusted click would (including `hashchange`-router navigation), rather than the browser tool's coordinate/ref `computer` clicks.
+
+**Async note:** immediately after setting `location.hash` or calling `loginAs()`/`logout()` in one `javascript_tool` call, `document.querySelector('.screen.active').dataset.screen` sometimes still reported the *previous* screen (one-tick lag before the `hashchange` handler ran). A follow-up read in a separate call always showed the correct, updated screen — this is a tool-round-trip-timing artifact, not an app bug (confirmed by re-reading the same expression a moment later and seeing it update).
+
+### Results
+
+**1. Guest state — PASS.**
+Opened `#mobile-nav` via `document.querySelector('.btn-navi.all').click()` (confirmed open: `className` became `krds-main-menu-mobile is-backdrop is-open`, `style="display: block;"`).
+- `header.querySelectorAll('[data-target="sitemap-overlay"], .open-modal')` inside `.gnb-header` → **0 matches**. A broader sweep of every `button`/`a` inside `#mobile-nav` whose text includes `사이트맵` → **0 matches**. No sitemap trigger anywhere in the mobile nav.
+- `#gnb-mobile-tabs > li` → 6 `<li>` in the DOM (5 IA tabs + the hidden 마이메뉴 `<li>`), but only **5 visible**: `getComputedStyle(#mobile-mymenu-tab).display === 'none'` confirmed, and filtering the tab list by `display !== 'none'` yields exactly `기업지원 프로그램 / 투자자 라운지 / 국유증권 가상데이터룸 / 고객마당 / 센터소개`.
+- `getComputedStyle(#mGnb-anchor-mymenu).display === 'none'` confirmed — no empty 마이메뉴 section renders while scrolling the panel list (since it's `display:none`, no content of it can appear regardless of scroll position).
+- `document.getElementById('mobile-mygov-links')` → `null` (old quick-link row is gone).
+
+**2. Login as company — PASS.**
+Navigated to `#/login` (`location.hash = '#/login'`), clicked `document.querySelector('[data-role-login="company"]')`. Result: `isLoggedIn` state applied — `#mygov-username` / `#mobile-mygov-username` both show `이수민님`, hash ended at `#/home`, `.screen.active.dataset.screen === 'home'`.
+
+Reopened the hamburger menu (`.btn-navi.all.click()`). `#gnb-mobile-tabs > li` now shows the 6th tab **visible** (`display: 'list-item'`, `id: 'mobile-mymenu-tab'`), positioned last, after 센터소개: `[기업지원 프로그램, 투자자 라운지, 국유증권 가상데이터룸, 고객마당, 센터소개, 마이메뉴]`. `#mGnb-anchor-mymenu` computed display is `'block'`.
+
+`#mobile-mymenu-list` innerHTML:
+```html
+<li><a href="#/mypage-status" class="gnb-sub-trigger">신청 및 진행 현황</a></li>
+<li><a href="#/mypage-docs" class="gnb-sub-trigger">제출 서류/보완 관리</a></li>
+<li><a href="#/mypage-account" class="gnb-sub-trigger">회원정보 및 권한 관리</a></li>
+```
+Exactly the 3 expected links with the expected `#/mypage-...` hrefs.
+
+Clicked `#mobile-mymenu-tab .gnb-main-trigger` (the tab itself): the target panel (`#mGnb-anchor-mymenu`, `getBoundingClientRect().top === 562` at that scroll position) was brought into the 812px-tall viewport — same scroll-into-view behavior as the original tabs (see check 6). Then clicked the `#/mypage-status` link directly: `location.hash` became `#/mypage-status`, and on a follow-up read `.screen.active.dataset.screen === 'mypage-status'` (document title updated to `"신청 및 진행 현황 | 온기업"`), and `#mobile-nav` auto-closed (`style="display: none;"`) — confirming the existing close-nav-on-navigate behavior still fires for the new tab's links too.
+
+**3. Logout — PASS.**
+Clicked `#mobile-logout-btn` directly (`hash` → `#/home`). Reopened the hamburger menu: `#gnb-mobile-tabs > li` filtered by visible (`display !== 'none'`) → count **5** again (마이메뉴 gone from the visible list). `getComputedStyle(#mobile-mymenu-tab).display === 'none'` and `getComputedStyle(#mGnb-anchor-mymenu).display === 'none'` both confirmed. `#mobile-guest-login` back to `display: flex`, `#mobile-mygov` back to `display: none`. Full round-trip (guest → company login → logout) returns to the exact guest-state markup.
+
+**4. Admin role (via 캠코 직원 로그인 / staff-login screen) — PASS.**
+Navigated to `#/staff-login`, filled `#staff-id`/`#staff-pw` with dummy values, clicked `#staff-login-btn` (this calls `loginAs('staff')`, which per `ROLE_PROFILES` has `name:'김민준'`, `mygovGroup:'캠코 관리자'` — this is the role the task's "admin" check refers to; there's a separate top-tier `'admin'`/최고 관리자 role behind an OTP screen with the identical `mygovGroup`, so both resolve to the same menu). Result: `hash → '#/admin-dashboard'`, `#mobile-mygov-username` shows `김민준님`.
+Reopened hamburger menu: `#mobile-mymenu-tab` display `'list-item'` (visible), `#mobile-mymenu-list` innerHTML:
+```html
+<li><a href="#/admin-dashboard" class="gnb-sub-trigger">관리자 대시보드</a></li>
+<li><a href="#/admin-applications" class="gnb-sub-trigger">신청 접수 목록</a></li>
+```
+Exactly 관리자 대시보드 / 신청 접수 목록, as expected, replacing the 3-item 마이페이지 set. Screenshot (375×812, admin logged in, menu open) visually confirms: header shows `김민준님 ⏎ 로그아웃` (no sitemap button), tab list ends in a highlighted `마이메뉴` tab, and scrolling to its section shows a `마이메뉴` heading with `관리자 대시보드` / `신청 접수 목록` links.
+
+**5. Desktop MyGOV dropdown regression (1280×900, still logged in as staff/admin from check 4) — PASS.**
+Resized to 1280×900. `#mygov-menu-list` innerHTML:
+```html
+<li><a href="#/admin-dashboard" class="item-link">관리자 대시보드</a></li>
+<li><a href="#/admin-applications" class="item-link">신청 접수 목록</a></li>
+```
+Identical items/hrefs to the mobile 마이메뉴 list (both are populated by the same `renderMyGovMenu(role)` call from the same `group.items`, as expected — this data source was not supposed to change). `#mygov-username` shows `김민준님`. Clicked the drop-toggle button (`#nav-mygov-wrap .drop-btn`): `.drop-menu` computed display became `'block'` (dropdown opens). Clicked the `#/admin-applications` link inside it: `location.hash` → `#/admin-applications`, and on follow-up read `.screen.active.dataset.screen === 'admin-applications'` (title `"신청 접수 목록 | 온기업"`) — the desktop MyGOV dropdown is fully functional and unchanged.
+
+**6. Tab-click scroll regression (back at 375×812) — PASS.**
+Reopened the hamburger menu, located the `고객마당` `<li>` among the now-6-item `#gnb-mobile-tabs` list, and clicked its `.gnb-main-trigger` (`href="#mGnb-anchor3"`). The resolved target panel's `<h2 class="sub-title">` text was `"고객마당"` (correct target, unaffected by the new 6th tab's presence), and its `getBoundingClientRect()` (`top: -36.5`, `height: 398.5`) showed it scrolled to align near the top of the viewport (`panelInViewport: true`) — the same scroll-to-anchor behavior observed for the new 마이메뉴 tab in check 2. The vendor's `krds_mainMenuMobile` click-binding is unaffected by adding a 6th static `<li>` at page load.
+
+### Remaining issues
+
+None found in the fix itself. One pre-existing-behavior note, not a defect introduced by this change: `ROLE_PROFILES.investor.mygovGroup` is `'투자자 라운지'` (not `'마이페이지'`), so logging in as **investor** specifically would show `매칭대상 기업정보 조회 / 투자제안 및 의향서 제출 / 매칭 관리` in both the mobile 마이메뉴 and the desktop MyGOV dropdown, not the `신청 및 진행 현황 / 제출 서류·보완 관리 / 회원정보 및 권한 관리` set the task description generalized across company/investor/partner. This is existing `ROLE_PROFILES`/`renderMyGovMenu` mapping behavior that predates this change (untouched by it, and correctly mirrored between mobile and desktop) — company and partner roles (both `mygovGroup:'마이페이지'`) do show the exact 3 links described, which is what was verified in check 2. Flagging only so the discrepancy in the task's own wording doesn't get mistaken for a bug in this diff.
+
+Two environmental notes (not defects): the browser tool's tab cap was already reached this round (9/9 tabs) and fresh `navigate()` calls to the file:// URL errored, so testing reused an existing tab plus `location.reload()` rather than a brand-new tab as in prior reviews — verified via DOM inspection immediately after reload that this did not reintroduce the stale-DOM risk noted in earlier reviews. Coordinate/ref clicks were not attempted this round (per the task's guidance, `element.click()` via `javascript_tool` was used directly for every interaction).
+
+### Overall verdict
+
+**PASS — ready to commit.** The mobile hamburger nav's 사이트맵 button and the old `#mobile-mygov-links` row are both fully removed from `#mobile-nav`, with the desktop header sitemap button, footer sitemap link, and `#sitemap-overlay` modal all untouched. The new 마이메뉴 tab/panel is hidden for guests, correctly appears (positioned after 센터소개) and populates with the right role-based links on login for company (마이페이지 group) and admin/staff (캠코 관리자 group), correctly disappears on logout, navigates correctly on link click (closing the mobile nav as expected), and does not break the existing tab-click scroll behavior for the 5 original tabs. The desktop MyGOV dropdown regression check also passes — same shared data source, unaffected by this change.
