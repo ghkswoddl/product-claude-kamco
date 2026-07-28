@@ -132,6 +132,12 @@
   /* MyGOV 데스크탑 드롭다운: krds.min.css 기본 .drop-menu 폭(130px)이 한글 메뉴명 기준으로 좁아 줄바꿈되므로 폭을 넓혀 한 줄로 표기 */
   #nav-mygov-wrap .drop-menu{width:22rem;min-width:22rem;}
   #mygov-menu-list .item-link{white-space:nowrap;}
+  .auth-status-badge{display:inline-block;font-size:1.3rem;font-weight:600;margin-top:.6rem;}
+  .auth-status-badge.checking{color:var(--krds-light-color-text-subtle);}
+  .auth-status-badge.ok{color:var(--krds-light-color-text-success);}
+  .auth-status-badge.ok::before{content:"✓ ";}
+  .auth-status-badge.fail{color:var(--krds-light-color-text-danger);}
+  #su-co-account-holder.ok, #su-pt-account-holder.ok{color:var(--krds-light-color-text-success);font-weight:600;}
 
   /* 온기업 CI(브랜드 마크) — 헤더/푸터/센터소개 CI 화면에서 공용 */
   .ci-mark{flex:none;display:block;}
@@ -835,37 +841,90 @@
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-co-term-3" /><label for="su-co-term-3">행정정보 공동이용 사전동의 <span class="doc-req">(필수)</span></label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-co-term-3" /><label for="su-co-term-3">마이데이터 전송요구 동의 <span class="doc-req">(필수)</span></label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-co-term-4" /><label for="su-co-term-4">기업지원 소식·혜택 알림 수신 동의(선택)</label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-co-term-4" /><label for="su-co-term-4">행정정보 공동이용 조회 동의 <span class="doc-req">(필수)</span></label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-co-term-5" /><label for="su-co-term-5">마케팅 정보 수신 동의(선택)</label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-co-term-5" /><label for="su-co-term-5">기업지원 소식·혜택 알림 수신 동의(선택)</label></div>
+                      <button type="button" class="krds-btn text small su-term-view">보기</button>
+                    </div>
+                    <div class="row" style="justify-content:space-between;">
+                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-co-term-6" /><label for="su-co-term-6">마케팅 정보 수신 동의(선택)</label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                   </div>
                 </div>
                 <div class="stack" style="margin-top:1.4rem;padding:1.6rem;background:var(--krds-light-color-background-alternative);border-radius:var(--krds-radius-medium2);gap:.4rem;">
                   <b style="font-size:1.3rem;">참고해 주세요</b>
-                  <p class="body-sm" style="margin:0;">알림 수신에 동의하면 심사 진행 상태, 서류 보완 요청, 공고 소식 등을 카카오 알림톡·이메일로 받아보실 수 있습니다.</p>
+                  <p class="body-sm" style="margin:0;">마이데이터 전송요구와 행정정보 공동이용 조회에 동의하면, 다음 단계에서 사업자등록증명원·법인등기부등본을 직접 업로드하지 않고 자동으로 조회해 드립니다.</p>
                 </div>
               </div>
 
               <div id="su-co-step-2" style="display:none;">
-                <h3 style="margin-bottom:1.4rem;">회원정보입력</h3>
-                <h4 style="font-size:1.4rem;margin-bottom:1.2rem;">기본정보</h4>
+                <h3 style="margin-bottom:1.4rem;">본인/기업 인증</h3>
                 <div class="fieldset">
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="su-co-brn">사업자등록번호 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><input type="text" id="su-co-brn" class="krds-input num su-required" placeholder="000-00-00000" style="width:100%;" /></div>
+                    <button type="button" class="krds-btn secondary su-biz-check-btn" data-prefix="su-co" style="width:100%;margin-top:.8rem;">사업자 상태 확인하기</button>
+                    <span class="auth-status-badge" id="su-co-biz-status"></span>
+                  </div>
                   <div class="form-group" style="width:100%;">
                     <div class="form-tit"><label for="su-co-name">담당자명 <span class="doc-req">(필수)</span></label></div>
                     <div class="form-conts"><input type="text" id="su-co-name" class="krds-input su-required" placeholder="이름을 입력해 주세요" style="width:100%;" /></div>
                   </div>
                   <div class="form-group" style="width:100%;">
-                    <div class="form-tit"><label for="su-co-brn">사업자등록번호 <span class="doc-req">(필수)</span></label></div>
-                    <div class="form-conts"><input type="text" id="su-co-brn" class="krds-input num su-required" placeholder="000-00-00000" style="width:100%;" /></div>
-                    <span class="caption">정확한 기업 실명 조회 및 회원 여부 확인을 위해 사업자등록번호 입력이 필요합니다.</span>
+                    <div class="form-tit">본인인증 방식 선택 <span class="doc-req">(필수)</span></div>
+                    <div class="krds-check-area">
+                      <div class="krds-form-check"><input type="radio" name="su-co-auth-type" id="su-co-auth-simple" checked /><label for="su-co-auth-simple">간편인증</label></div>
+                      <div class="krds-form-check"><input type="radio" name="su-co-auth-type" id="su-co-auth-phone" /><label for="su-co-auth-phone">휴대폰 본인인증</label></div>
+                    </div>
+                    <button type="button" class="krds-btn secondary su-person-auth-btn" data-prefix="su-co" style="width:100%;margin-top:.8rem;">본인인증하기</button>
+                    <span class="auth-status-badge" id="su-co-person-auth-status"></span>
+                  </div>
+                </div>
+                <ul style="margin:1.4rem 0 0 1.6rem;font-size:1.2rem;color:var(--krds-light-color-text-subtle);line-height:1.7;">
+                  <li>사업자 상태 확인과 본인인증을 모두 완료해야 다음 단계로 진행할 수 있습니다.</li>
+                  <li>테스트를 위해 사업자등록번호에 999-99-99999를 입력하면 휴·폐업 사업자 시나리오를 확인할 수 있습니다.</li>
+                </ul>
+              </div>
+
+              <div id="su-co-step-3" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">행정정보 자동조회 및 확인</h3>
+                <div id="su-co-admin-loading" class="stack" style="align-items:center;padding:2.4rem 0;">
+                  <p class="body-sm">행정정보를 조회하고 있습니다. 잠시만 기다려 주세요.</p>
+                </div>
+                <div id="su-co-admin-result" class="stack" style="display:none;gap:1.2rem;">
+                  <div class="box box-pad stack">
+                    <h4 style="font-size:1.4rem;">법인등기부등본</h4>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">법인명</span><b>(주)온기업테스트</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">대표자</span><b id="su-co-admin-rep-name">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">자본금</span><b>5억 원</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">본점소재지</span><b>서울특별시 강남구 테헤란로 123</b></div>
+                    <button type="button" class="krds-btn text small su-doc-preview-btn" data-doc-title="법인등기부등본">원문 보기</button>
+                  </div>
+                  <div class="box box-pad stack">
+                    <h4 style="font-size:1.4rem;">사업자등록증명원</h4>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">업태</span><b>제조업</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">종목</span><b>기계부품 제조</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">개업일</span><b>2015-03-02</b></div>
+                    <button type="button" class="krds-btn text small su-doc-preview-btn" data-doc-title="사업자등록증명원">원문 보기</button>
+                  </div>
+                  <button type="button" class="krds-btn text small su-admin-info-link">정보가 다른가요?</button>
+                </div>
+              </div>
+
+              <div id="su-co-step-4" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">부가정보 입력</h3>
+                <h4 style="font-size:1.4rem;margin-bottom:1.2rem;">담당자 연락처</h4>
+                <div class="fieldset">
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="su-co-phone">휴대전화번호 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><input type="tel" id="su-co-phone" class="krds-input num su-required" placeholder="010-0000-0000" style="width:100%;" /></div>
                   </div>
                   <div class="form-group" style="width:100%;">
                     <div class="form-tit"><label for="su-co-id">아이디 <span class="doc-req">(필수)</span></label></div>
@@ -889,18 +948,41 @@
                     </div>
                     <span class="caption">비밀번호와 동일하게 입력해 주세요.</span>
                   </div>
+                </div>
+                <h4 style="font-size:1.4rem;margin:1.8rem 0 1.2rem;">정산계좌 정보</h4>
+                <div class="fieldset">
                   <div class="form-group" style="width:100%;">
-                    <div class="form-tit">인증 방식 선택 <span class="doc-req">(필수)</span></div>
-                    <div class="krds-check-area">
-                      <div class="krds-form-check"><input type="radio" name="su-co-auth-type" id="su-co-auth-simple" checked /><label for="su-co-auth-simple">간편인증</label></div>
-                      <div class="krds-form-check"><input type="radio" name="su-co-auth-type" id="su-co-auth-phone" /><label for="su-co-auth-phone">휴대폰 본인인증</label></div>
-                    </div>
+                    <div class="form-tit"><label for="su-co-bank">은행 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><select id="su-co-bank" class="krds-form-select" style="width:100%;"><option>KB국민은행</option><option>신한은행</option><option>우리은행</option><option>하나은행</option><option>IBK기업은행</option></select></div>
+                  </div>
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="su-co-account-no">계좌번호 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><input type="text" id="su-co-account-no" class="krds-input num" placeholder="'-' 없이 숫자만 입력" style="width:100%;" /></div>
+                    <button type="button" class="krds-btn secondary su-account-verify-btn" data-prefix="su-co" style="width:100%;margin-top:.8rem;">예금주 확인</button>
+                    <span class="caption" id="su-co-account-holder"></span>
                   </div>
                 </div>
-                <ul style="margin:1.4rem 0 0 1.6rem;font-size:1.2rem;color:var(--krds-light-color-text-subtle);line-height:1.7;">
-                  <li>본인인증을 등록하면 간편인증 로그인, 전자증명서 발급, 알림서비스 등을 이용할 수 있습니다.</li>
-                  <li>등록된 사업자등록번호로 지원 신청·자가진단·마이페이지 서비스를 이용할 수 있습니다.</li>
-                </ul>
+              </div>
+
+              <div id="su-co-step-5" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">최종 확인</h3>
+                <div class="stack" style="gap:1.2rem;">
+                  <div class="box box-pad stack">
+                    <h4 style="font-size:1.4rem;">자동조회 정보 (읽기전용)</h4>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">법인명</span><b>(주)온기업테스트</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">대표자</span><b data-recap-for="su-co-name">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">사업자등록번호</span><b data-recap-for="su-co-brn">-</b></div>
+                  </div>
+                  <div class="box box-pad stack">
+                    <div class="row" style="justify-content:space-between;align-items:center;">
+                      <h4 style="font-size:1.4rem;margin:0;">직접입력 정보</h4>
+                      <button type="button" class="krds-btn text small su-recap-edit" data-prefix="su-co">수정</button>
+                    </div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">휴대전화번호</span><b data-recap-for="su-co-phone">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">아이디</span><b data-recap-for="su-co-id">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">정산계좌</span><b data-recap-for="su-co-account-no">-</b></div>
+                  </div>
+                </div>
               </div>
 
               <div id="su-co-step-done" style="display:none;text-align:center;padding:1.6rem 0;">
@@ -938,28 +1020,31 @@
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-inv-term-3" /><label for="su-inv-term-3">전자 NDA(비밀유지약정) 이용 동의 <span class="doc-req">(필수)</span></label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-inv-term-3" /><label for="su-inv-term-3">마이데이터 전송요구 동의 <span class="doc-req">(필수)</span></label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-inv-term-4" /><label for="su-inv-term-4">신규 매칭 딜(Deal) 소식 수신 동의(선택)</label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-inv-term-4" /><label for="su-inv-term-4">전자 NDA(비밀유지약정) 이용 동의 <span class="doc-req">(필수)</span></label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-inv-term-5" /><label for="su-inv-term-5">마케팅 정보 수신 동의(선택)</label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-inv-term-5" /><label for="su-inv-term-5">신규 매칭 딜(Deal) 소식 수신 동의(선택)</label></div>
+                      <button type="button" class="krds-btn text small su-term-view">보기</button>
+                    </div>
+                    <div class="row" style="justify-content:space-between;">
+                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-inv-term-6" /><label for="su-inv-term-6">마케팅 정보 수신 동의(선택)</label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                   </div>
                 </div>
                 <div class="stack" style="margin-top:1.4rem;padding:1.6rem;background:var(--krds-light-color-background-alternative);border-radius:var(--krds-radius-medium2);gap:.4rem;">
                   <b style="font-size:1.3rem;">참고해 주세요</b>
-                  <p class="body-sm" style="margin:0;">NDA 이용에 동의하면 국유증권 가상데이터룸(VDR) 접근 시 별도 서명 없이 절차가 간소화됩니다.</p>
+                  <p class="body-sm" style="margin:0;">NDA 이용에 동의하면 국유증권 가상데이터룸(VDR) 접근 시 별도 서명 없이 절차가 간소화됩니다. 마이데이터 전송요구에 동의하면 본인확인 절차가 간편해집니다.</p>
                 </div>
               </div>
 
               <div id="su-inv-step-2" style="display:none;">
-                <h3 style="margin-bottom:1.4rem;">회원정보입력</h3>
-                <h4 style="font-size:1.4rem;margin-bottom:1.2rem;">기본정보</h4>
+                <h3 style="margin-bottom:1.4rem;">본인 인증</h3>
                 <div class="fieldset">
                   <div class="form-group" style="width:100%;">
                     <div class="form-tit"><label for="su-inv-name">이름 <span class="doc-req">(필수)</span></label></div>
@@ -968,8 +1053,37 @@
                   <div class="form-group" style="width:100%;">
                     <div class="form-tit"><label for="su-inv-birth">생년월일 <span class="doc-req">(필수)</span></label></div>
                     <div class="form-conts"><input type="text" id="su-inv-birth" class="krds-input num su-required" placeholder="YYYYMMDD" style="width:100%;" /></div>
-                    <span class="caption">정확한 실명 조회 및 회원 여부 확인을 위해 생년월일 입력이 필요합니다.</span>
                   </div>
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit">본인인증 방식 선택 <span class="doc-req">(필수)</span></div>
+                    <div class="krds-check-area">
+                      <div class="krds-form-check"><input type="radio" name="su-inv-auth-type" id="su-inv-auth-simple" checked /><label for="su-inv-auth-simple">간편인증</label></div>
+                      <div class="krds-form-check"><input type="radio" name="su-inv-auth-type" id="su-inv-auth-phone" /><label for="su-inv-auth-phone">휴대폰 본인인증</label></div>
+                    </div>
+                    <button type="button" class="krds-btn secondary su-person-auth-btn" data-prefix="su-inv" style="width:100%;margin-top:.8rem;">본인인증하기</button>
+                    <span class="auth-status-badge" id="su-inv-person-auth-status"></span>
+                  </div>
+                </div>
+                <ul style="margin:1.4rem 0 0 1.6rem;font-size:1.2rem;color:var(--krds-light-color-text-subtle);line-height:1.7;">
+                  <li>본인인증을 완료해야 다음 단계로 진행할 수 있습니다.</li>
+                </ul>
+              </div>
+
+              <div id="su-inv-step-3" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">본인 실명확인 결과</h3>
+                <div id="su-inv-admin-loading" class="stack" style="align-items:center;padding:2.4rem 0;">
+                  <p class="body-sm">본인확인 결과를 조회하고 있습니다. 잠시만 기다려 주세요.</p>
+                </div>
+                <div id="su-inv-admin-result" class="box box-pad stack" style="display:none;gap:1rem;">
+                  <div class="row" style="justify-content:space-between;"><span class="caption">성명</span><b id="su-inv-admin-person-name">-</b></div>
+                  <div class="row" style="justify-content:space-between;"><span class="caption">생년월일</span><b id="su-inv-admin-person-birth">-</b></div>
+                  <span class="krds-badge bg-light-success" style="width:fit-content;">실명확인 완료</span>
+                </div>
+              </div>
+
+              <div id="su-inv-step-4" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">부가정보 입력</h3>
+                <div class="fieldset">
                   <div class="form-group" style="width:100%;">
                     <div class="form-tit"><label for="su-inv-org">소속(기관명) <span class="caption">(선택)</span></label></div>
                     <div class="form-conts"><input type="text" id="su-inv-org" class="krds-input" placeholder="예: OO자산운용" style="width:100%;" /></div>
@@ -1000,18 +1114,26 @@
                     </div>
                     <span class="caption">비밀번호와 동일하게 입력해 주세요.</span>
                   </div>
-                  <div class="form-group" style="width:100%;">
-                    <div class="form-tit">인증 방식 선택 <span class="doc-req">(필수)</span></div>
-                    <div class="krds-check-area">
-                      <div class="krds-form-check"><input type="radio" name="su-inv-auth-type" id="su-inv-auth-simple" checked /><label for="su-inv-auth-simple">간편인증</label></div>
-                      <div class="krds-form-check"><input type="radio" name="su-inv-auth-type" id="su-inv-auth-phone" /><label for="su-inv-auth-phone">휴대폰 본인인증</label></div>
+                </div>
+              </div>
+
+              <div id="su-inv-step-5" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">최종 확인</h3>
+                <div class="stack" style="gap:1.2rem;">
+                  <div class="box box-pad stack">
+                    <h4 style="font-size:1.4rem;">본인확인 정보 (읽기전용)</h4>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">성명</span><b data-recap-for="su-inv-name">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">생년월일</span><b data-recap-for="su-inv-birth">-</b></div>
+                  </div>
+                  <div class="box box-pad stack">
+                    <div class="row" style="justify-content:space-between;align-items:center;">
+                      <h4 style="font-size:1.4rem;margin:0;">직접입력 정보</h4>
+                      <button type="button" class="krds-btn text small su-recap-edit" data-prefix="su-inv">수정</button>
                     </div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">투자자 구분</span><b data-recap-for="su-inv-type">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">아이디</span><b data-recap-for="su-inv-id">-</b></div>
                   </div>
                 </div>
-                <ul style="margin:1.4rem 0 0 1.6rem;font-size:1.2rem;color:var(--krds-light-color-text-subtle);line-height:1.7;">
-                  <li>본인인증을 등록하면 투자 의향서(LOI) 제출 시 전자서명을 간편하게 이용할 수 있습니다.</li>
-                  <li>등록된 정보로 투자자 라운지의 매칭대상 기업정보 조회, VDR 접근 신청 서비스를 이용할 수 있습니다.</li>
-                </ul>
               </div>
 
               <div id="su-inv-step-done" style="display:none;text-align:center;padding:1.6rem 0;">
@@ -1033,7 +1155,7 @@
             <h3 class="sr-only">협약기관 가입</h3>
             <ol class="krds-step-wrap" id="signup-stepper-pt"></ol>
             <div class="box box-pad" style="max-width:64rem;">
-              <div id="su-pt-step-1">
+            <div id="su-pt-step-1">
                 <h3 style="margin-bottom:1.4rem;">약관동의</h3>
                 <div style="border:1px solid var(--krds-light-color-border-default);border-radius:var(--krds-radius-medium2);overflow:hidden;">
                   <div class="krds-form-check" style="padding:1.6rem;border-bottom:1px solid var(--krds-light-color-border-default);background:var(--krds-light-color-background-alternative);">
@@ -1049,45 +1171,97 @@
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-pt-term-3" /><label for="su-pt-term-3">위탁 과업 수행기관 준수사항 동의 <span class="doc-req">(필수)</span></label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-pt-term-3" /><label for="su-pt-term-3">마이데이터 전송요구 동의 <span class="doc-req">(필수)</span></label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-pt-term-4" /><label for="su-pt-term-4">과업 배정·공고 소식 수신 동의(선택)</label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-pt-term-4" /><label for="su-pt-term-4">행정정보 공동이용 조회 동의 <span class="doc-req">(필수)</span></label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                     <div class="row" style="justify-content:space-between;">
-                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-pt-term-5" /><label for="su-pt-term-5">마케팅 정보 수신 동의(선택)</label></div>
+                      <div class="krds-form-check"><input type="checkbox" class="su-term su-term-required" id="su-pt-term-5" /><label for="su-pt-term-5">위탁 과업 수행기관 준수사항 동의 <span class="doc-req">(필수)</span></label></div>
+                      <button type="button" class="krds-btn text small su-term-view">보기</button>
+                    </div>
+                    <div class="row" style="justify-content:space-between;">
+                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-pt-term-6" /><label for="su-pt-term-6">과업 배정·공고 소식 수신 동의(선택)</label></div>
+                      <button type="button" class="krds-btn text small su-term-view">보기</button>
+                    </div>
+                    <div class="row" style="justify-content:space-between;">
+                      <div class="krds-form-check"><input type="checkbox" class="su-term" id="su-pt-term-7" /><label for="su-pt-term-7">마케팅 정보 수신 동의(선택)</label></div>
                       <button type="button" class="krds-btn text small su-term-view">보기</button>
                     </div>
                   </div>
                 </div>
                 <div class="stack" style="margin-top:1.4rem;padding:1.6rem;background:var(--krds-light-color-background-alternative);border-radius:var(--krds-radius-medium2);gap:.4rem;">
                   <b style="font-size:1.3rem;">참고해 주세요</b>
-                  <p class="body-sm" style="margin:0;">위탁 과업 수행기관 준수사항에 동의하면 캠코 담당자로부터 실사·평가 과업을 배정받을 수 있습니다.</p>
+                  <p class="body-sm" style="margin:0;">마이데이터 전송요구와 행정정보 공동이용 조회에 동의하면, 다음 단계에서 사업자등록증명원·법인등기부등본을 직접 업로드하지 않고 자동으로 조회해 드립니다.</p>
                 </div>
               </div>
 
               <div id="su-pt-step-2" style="display:none;">
-                <h3 style="margin-bottom:1.4rem;">회원정보입력</h3>
-                <h4 style="font-size:1.4rem;margin-bottom:1.2rem;">기본정보</h4>
+                <h3 style="margin-bottom:1.4rem;">본인/기관 인증</h3>
                 <div class="fieldset">
                   <div class="form-group" style="width:100%;">
-                    <div class="form-tit"><label for="su-pt-org">기관명 <span class="doc-req">(필수)</span></label></div>
-                    <div class="form-conts"><input type="text" id="su-pt-org" class="krds-input su-required" placeholder="예: 삼경회계법인" style="width:100%;" /></div>
+                    <div class="form-tit"><label for="su-pt-brn">사업자등록번호 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><input type="text" id="su-pt-brn" class="krds-input num su-required" placeholder="000-00-00000" style="width:100%;" /></div>
+                    <button type="button" class="krds-btn secondary su-biz-check-btn" data-prefix="su-pt" style="width:100%;margin-top:.8rem;">사업자 상태 확인하기</button>
+                    <span class="auth-status-badge" id="su-pt-biz-status"></span>
                   </div>
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="su-pt-name">담당자명 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><input type="text" id="su-pt-name" class="krds-input su-required" placeholder="이름을 입력해 주세요" style="width:100%;" /></div>
+                  </div>
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit">본인인증 방식 선택 <span class="doc-req">(필수)</span></div>
+                    <div class="krds-check-area">
+                      <div class="krds-form-check"><input type="radio" name="su-pt-auth-type" id="su-pt-auth-simple" checked /><label for="su-pt-auth-simple">간편인증</label></div>
+                      <div class="krds-form-check"><input type="radio" name="su-pt-auth-type" id="su-pt-auth-phone" /><label for="su-pt-auth-phone">휴대폰 본인인증</label></div>
+                    </div>
+                    <button type="button" class="krds-btn secondary su-person-auth-btn" data-prefix="su-pt" style="width:100%;margin-top:.8rem;">본인인증하기</button>
+                    <span class="auth-status-badge" id="su-pt-person-auth-status"></span>
+                  </div>
+                </div>
+                <ul style="margin:1.4rem 0 0 1.6rem;font-size:1.2rem;color:var(--krds-light-color-text-subtle);line-height:1.7;">
+                  <li>사업자 상태 확인과 본인인증을 모두 완료해야 다음 단계로 진행할 수 있습니다.</li>
+                  <li>테스트를 위해 사업자등록번호에 999-99-99999를 입력하면 휴·폐업 사업자 시나리오를 확인할 수 있습니다.</li>
+                </ul>
+              </div>
+
+              <div id="su-pt-step-3" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">행정정보 자동조회 및 확인</h3>
+                <div id="su-pt-admin-loading" class="stack" style="align-items:center;padding:2.4rem 0;">
+                  <p class="body-sm">행정정보를 조회하고 있습니다. 잠시만 기다려 주세요.</p>
+                </div>
+                <div id="su-pt-admin-result" class="stack" style="display:none;gap:1.2rem;">
+                  <div class="box box-pad stack">
+                    <h4 style="font-size:1.4rem;">법인등기부등본</h4>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">기관명</span><b>삼경회계법인</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">대표자</span><b id="su-pt-admin-rep-name">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">자본금</span><b>3억 원</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">본점소재지</span><b>서울특별시 서초구 서초대로 456</b></div>
+                    <button type="button" class="krds-btn text small su-doc-preview-btn" data-doc-title="법인등기부등본">원문 보기</button>
+                  </div>
+                  <div class="box box-pad stack">
+                    <h4 style="font-size:1.4rem;">사업자등록증명원</h4>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">업태</span><b>서비스업</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">종목</span><b>회계·세무 자문</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">개업일</span><b>2009-11-20</b></div>
+                    <button type="button" class="krds-btn text small su-doc-preview-btn" data-doc-title="사업자등록증명원">원문 보기</button>
+                  </div>
+                  <button type="button" class="krds-btn text small su-admin-info-link">정보가 다른가요?</button>
+                </div>
+              </div>
+
+              <div id="su-pt-step-4" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">부가정보 입력</h3>
+                <div class="fieldset">
                   <div class="form-group" style="width:100%;">
                     <div class="form-tit"><label for="su-pt-org-type">기관 유형 <span class="doc-req">(필수)</span></label></div>
                     <div class="form-conts"><select id="su-pt-org-type" class="krds-form-select" style="width:100%;"><option>회계법인</option><option>감정평가법인</option><option>법무법인</option><option>금융사</option><option>기타</option></select></div>
                   </div>
                   <div class="form-group" style="width:100%;">
-                    <div class="form-tit"><label for="su-pt-brn">사업자등록번호 <span class="doc-req">(필수)</span></label></div>
-                    <div class="form-conts"><input type="text" id="su-pt-brn" class="krds-input num su-required" placeholder="000-00-00000" style="width:100%;" /></div>
-                    <span class="caption">정확한 기관 실명 조회 및 회원 여부 확인을 위해 사업자등록번호 입력이 필요합니다.</span>
-                  </div>
-                  <div class="form-group" style="width:100%;">
-                    <div class="form-tit"><label for="su-pt-name">담당자명 <span class="doc-req">(필수)</span></label></div>
-                    <div class="form-conts"><input type="text" id="su-pt-name" class="krds-input su-required" placeholder="이름을 입력해 주세요" style="width:100%;" /></div>
+                    <div class="form-tit"><label for="su-pt-phone">담당자 연락처 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><input type="tel" id="su-pt-phone" class="krds-input num su-required" placeholder="010-0000-0000" style="width:100%;" /></div>
                   </div>
                   <div class="form-group" style="width:100%;">
                     <div class="form-tit"><label for="su-pt-id">아이디 <span class="doc-req">(필수)</span></label></div>
@@ -1111,18 +1285,42 @@
                     </div>
                     <span class="caption">비밀번호와 동일하게 입력해 주세요.</span>
                   </div>
+                </div>
+                <h4 style="font-size:1.4rem;margin:1.8rem 0 1.2rem;">정산계좌 정보</h4>
+                <div class="fieldset">
                   <div class="form-group" style="width:100%;">
-                    <div class="form-tit">인증 방식 선택 <span class="doc-req">(필수)</span></div>
-                    <div class="krds-check-area">
-                      <div class="krds-form-check"><input type="radio" name="su-pt-auth-type" id="su-pt-auth-simple" checked /><label for="su-pt-auth-simple">간편인증</label></div>
-                      <div class="krds-form-check"><input type="radio" name="su-pt-auth-type" id="su-pt-auth-phone" /><label for="su-pt-auth-phone">휴대폰 본인인증</label></div>
-                    </div>
+                    <div class="form-tit"><label for="su-pt-bank">은행 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><select id="su-pt-bank" class="krds-form-select" style="width:100%;"><option>KB국민은행</option><option>신한은행</option><option>우리은행</option><option>하나은행</option><option>IBK기업은행</option></select></div>
+                  </div>
+                  <div class="form-group" style="width:100%;">
+                    <div class="form-tit"><label for="su-pt-account-no">계좌번호 <span class="doc-req">(필수)</span></label></div>
+                    <div class="form-conts"><input type="text" id="su-pt-account-no" class="krds-input num" placeholder="'-' 없이 숫자만 입력" style="width:100%;" /></div>
+                    <button type="button" class="krds-btn secondary su-account-verify-btn" data-prefix="su-pt" style="width:100%;margin-top:.8rem;">예금주 확인</button>
+                    <span class="caption" id="su-pt-account-holder"></span>
                   </div>
                 </div>
-                <ul style="margin:1.4rem 0 0 1.6rem;font-size:1.2rem;color:var(--krds-light-color-text-subtle);line-height:1.7;">
-                  <li>본인인증을 등록하면 위탁 과업 배정 알림, 평가보고서 제출 등을 간편하게 이용할 수 있습니다.</li>
-                  <li>등록된 사업자등록번호로 소속 기관의 과업 진행 현황을 함께 조회할 수 있습니다.</li>
-                </ul>
+              </div>
+
+              <div id="su-pt-step-5" style="display:none;">
+                <h3 style="margin-bottom:1.4rem;">최종 확인</h3>
+                <div class="stack" style="gap:1.2rem;">
+                  <div class="box box-pad stack">
+                    <h4 style="font-size:1.4rem;">자동조회 정보 (읽기전용)</h4>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">기관명</span><b>삼경회계법인</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">대표자</span><b data-recap-for="su-pt-name">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">사업자등록번호</span><b data-recap-for="su-pt-brn">-</b></div>
+                  </div>
+                  <div class="box box-pad stack">
+                    <div class="row" style="justify-content:space-between;align-items:center;">
+                      <h4 style="font-size:1.4rem;margin:0;">직접입력 정보</h4>
+                      <button type="button" class="krds-btn text small su-recap-edit" data-prefix="su-pt">수정</button>
+                    </div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">기관 유형</span><b data-recap-for="su-pt-org-type">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">담당자 연락처</span><b data-recap-for="su-pt-phone">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">아이디</span><b data-recap-for="su-pt-id">-</b></div>
+                    <div class="row" style="justify-content:space-between;"><span class="caption">정산계좌</span><b data-recap-for="su-pt-account-no">-</b></div>
+                  </div>
+                </div>
               </div>
 
               <div id="su-pt-step-done" style="display:none;text-align:center;padding:1.6rem 0;">
@@ -2680,6 +2878,32 @@
   </div>
   <div class="modal-back close-modal"></div>
 </section>
+
+<!-- 회원가입: 최종 제출 확인 (krds-modal 컴포넌트) -->
+<button type="button" class="open-modal" data-target="signup-submit-confirm-modal" id="btn-open-signup-submit-modal" style="display:none;" aria-hidden="true">제출 확인 열기</button>
+<section id="signup-submit-confirm-modal" class="krds-modal fade" role="dialog" aria-labelledby="signup-submit-confirm-title">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="signup-submit-confirm-title" class="modal-title">가입 신청을 제출하시겠습니까?</h2>
+      </div>
+      <div class="modal-conts">
+        <div class="conts-area stack">
+          <p class="body-sm">제출 후에는 본인인증 정보를 다시 변경하기 어렵습니다. 계속하시겠습니까?</p>
+        </div>
+      </div>
+      <div class="modal-btn btn-wrap">
+        <button type="button" class="krds-btn medium tertiary close-modal" id="signup-submit-cancel">취소</button>
+        <button type="button" class="krds-btn medium primary" id="signup-submit-confirm">제출하기</button>
+      </div>
+      <button type="button" class="krds-btn medium icon btn-close close-modal">
+        <span class="sr-only">닫기</span>
+        <i class="svg-icon ico-popup-close"></i>
+      </button>
+    </div>
+  </div>
+  <div class="modal-back close-modal"></div>
+</section>
 </div>
 
 <div class="toast" id="toast">임시저장되었습니다</div>
@@ -3563,13 +3787,16 @@
     if(e.key === 'Enter') runGlobalSearch();
   });
 
-  // ---- 회원가입(정부24 회원가입과 동일하게 약관동의 → 회원정보입력 → 가입완료 3단계 구성) ----
+  // ---- 회원가입(마이데이터·행정망 연계형 6단계: 약관동의→본인/기업인증→행정정보자동조회→부가정보입력→최종확인→가입완료) ----
   // 기업회원/투자자회원/협약기관 탭별로 완전히 독립된 폼 상태를 가지며, 탭 전환 시 작성 중인 내용은 저장되지 않고 초기화된다
   const SIGNUP_PREFIXES = ['su-co', 'su-inv', 'su-pt'];
-  const signupStepLabels = ['약관동의', '회원정보입력', '가입완료'];
-  const signupStep = { 'su-co': 0, 'su-inv': 0, 'su-pt': 0 }; // 0: 약관동의, 1: 회원정보입력, 2: 가입완료
+  const signupStepLabels = ['약관동의', '본인인증', '정보 자동조회', '부가정보입력', '최종확인', '가입완료'];
+  const signupStep = { 'su-co': 0, 'su-inv': 0, 'su-pt': 0 };
   let signupActiveTab = 'co';
   let signupPendingTab = null;
+  let signupPendingSubmitPrefix = null;
+
+  function isBizPrefix(prefix){ return prefix === 'su-co' || prefix === 'su-pt'; }
 
   function renderSignupStepper(prefix){
     const el = document.getElementById('signup-stepper-' + prefix.replace('su-', ''));
@@ -3628,54 +3855,257 @@
 
   document.querySelectorAll('.su-btn-cancel').forEach(btn => btn.addEventListener('click', () => navigateTo('home')));
 
-  document.querySelectorAll('.su-btn-next').forEach(btn => {
+  // ---- Step1(본인/기업 인증) 시뮬레이션 ----
+  function updateStep1NextState(prefix){
+    const nextBtn = document.querySelector('.su-btn-next[data-prefix="' + prefix + '"]');
+    const personStatus = document.getElementById(prefix + '-person-auth-status');
+    const personOk = !!personStatus && personStatus.classList.contains('ok');
+    const bizStatus = document.getElementById(prefix + '-biz-status');
+    const bizOk = !isBizPrefix(prefix) || (!!bizStatus && bizStatus.classList.contains('ok'));
+    nextBtn.disabled = !(personOk && bizOk);
+  }
+
+  function runBizStatusCheck(prefix){
+    const input = document.getElementById(prefix + '-brn');
+    const btn = document.querySelector('.su-biz-check-btn[data-prefix="' + prefix + '"]');
+    const status = document.getElementById(prefix + '-biz-status');
+    const val = input.value.trim();
+    if(!val){ toast('사업자등록번호를 입력하세요'); return; }
+    btn.disabled = true;
+    status.className = 'auth-status-badge checking';
+    status.textContent = '확인 중...';
+    setTimeout(() => {
+      btn.disabled = false;
+      if(val.replace(/-/g, '') === '9999999999'){
+        status.className = 'auth-status-badge fail';
+        status.textContent = '휴·폐업 상태로 확인되어 가입을 진행할 수 없습니다';
+        toast('휴·폐업 상태의 사업자입니다. 고객센터로 문의해 주세요');
+      } else {
+        status.className = 'auth-status-badge ok';
+        status.textContent = '계속사업자로 확인되었습니다';
+      }
+      updateStep1NextState(prefix);
+    }, 1200);
+  }
+
+  function runPersonAuth(prefix){
+    const name = document.getElementById(prefix + '-name').value.trim();
+    const btn = document.querySelector('.su-person-auth-btn[data-prefix="' + prefix + '"]');
+    const status = document.getElementById(prefix + '-person-auth-status');
+    if(!name){ toast('성명을 입력하세요'); return; }
+    btn.disabled = true;
+    status.className = 'auth-status-badge checking';
+    status.textContent = '인증 중...';
+    setTimeout(() => {
+      btn.disabled = false;
+      status.className = 'auth-status-badge ok';
+      status.textContent = '본인인증 완료';
+      updateStep1NextState(prefix);
+    }, 800);
+  }
+
+  document.querySelectorAll('.su-biz-check-btn').forEach(btn => btn.addEventListener('click', () => runBizStatusCheck(btn.dataset.prefix)));
+  document.querySelectorAll('.su-person-auth-btn').forEach(btn => btn.addEventListener('click', () => runPersonAuth(btn.dataset.prefix)));
+
+  // ---- Step2(행정정보 자동조회) 시뮬레이션 ----
+  function runAdminDataFetch(prefix){
+    const loading = document.getElementById(prefix + '-admin-loading');
+    const result = document.getElementById(prefix + '-admin-result');
+    loading.style.display = '';
+    result.style.display = 'none';
+    const name = (document.getElementById(prefix + '-name').value || '').trim() || '-';
+    setTimeout(() => {
+      loading.style.display = 'none';
+      result.style.display = '';
+      if(isBizPrefix(prefix)){
+        const repEl = document.getElementById(prefix + '-admin-rep-name');
+        if(repEl) repEl.textContent = name;
+      } else {
+        const nameEl = document.getElementById(prefix + '-admin-person-name');
+        if(nameEl) nameEl.textContent = name;
+        const birthEl = document.getElementById(prefix + '-admin-person-birth');
+        const birthInput = document.getElementById(prefix + '-birth');
+        if(birthEl) birthEl.textContent = (birthInput && birthInput.value.trim()) || '-';
+      }
+      document.querySelector('.su-btn-next[data-prefix="' + prefix + '"]').disabled = false;
+    }, isBizPrefix(prefix) ? 1000 : 800);
+  }
+
+  document.querySelectorAll('.su-doc-preview-btn').forEach(btn => {
+    btn.addEventListener('click', () => toast((btn.dataset.docTitle || '문서') + ' 원문 - 실제 서비스에서는 발급 원본 PDF가 표시됩니다'));
+  });
+  document.querySelectorAll('.su-admin-info-link').forEach(btn => {
+    btn.addEventListener('click', () => toast('등록된 정보가 실제와 다르다면 국세청·법원 등 발급기관에서 정정 후 다시 조회해 주세요'));
+  });
+
+  // ---- Step3(부가정보입력) 내 정산계좌 예금주 확인 시뮬레이션 (기업/협약기관 전용) ----
+  function runAccountVerify(prefix){
+    if(!isBizPrefix(prefix)) return;
+    const input = document.getElementById(prefix + '-account-no');
+    const btn = document.querySelector('.su-account-verify-btn[data-prefix="' + prefix + '"]');
+    const holder = document.getElementById(prefix + '-account-holder');
+    const val = input.value.trim();
+    if(!val){ toast('계좌번호를 입력하세요'); return; }
+    btn.disabled = true;
+    holder.textContent = '조회 중...';
+    holder.classList.remove('ok');
+    const name = (document.getElementById(prefix + '-name').value || '').trim() || '예금주';
+    setTimeout(() => {
+      btn.disabled = false;
+      holder.textContent = name + ' (확인됨)';
+      holder.classList.add('ok');
+    }, 800);
+  }
+  document.querySelectorAll('.su-account-verify-btn').forEach(btn => btn.addEventListener('click', () => runAccountVerify(btn.dataset.prefix)));
+
+  // ---- Step4(최종확인) 리캡 렌더링 ----
+  function renderSignupFinalRecap(prefix){
+    document.querySelectorAll('#' + prefix + '-step-5 [data-recap-for]').forEach(el => {
+      const src = document.getElementById(el.dataset.recapFor);
+      if(src) el.textContent = src.value || src.textContent || '-';
+    });
+  }
+
+  document.querySelectorAll('.su-recap-edit').forEach(btn => {
     btn.addEventListener('click', () => {
       const prefix = btn.dataset.prefix;
-      if(signupStep[prefix] === 0){
-        signupStep[prefix] = 1;
-        document.getElementById(prefix + '-step-1').style.display = 'none';
-        document.getElementById(prefix + '-step-2').style.display = 'block';
-        btn.textContent = '가입완료';
-        renderSignupStepper(prefix);
-        window.scrollTo(0, 0);
-        return;
-      }
-      const scope = document.getElementById(prefix + '-step-2');
-      const requiredInputs = Array.from(scope.querySelectorAll('.su-required'));
-      if(requiredInputs.some(inp => !inp.value.trim())){ toast('필수 항목을 모두 입력하세요'); return; }
-      const pw = document.getElementById(prefix + '-pw').value;
-      const pw2 = document.getElementById(prefix + '-pw2').value;
-      if(pw !== pw2){ toast('비밀번호가 일치하지 않습니다'); return; }
-      signupStep[prefix] = 2;
-      scope.style.display = 'none';
-      document.getElementById(prefix + '-step-done').style.display = 'block';
-      document.getElementById(prefix + '-nav').style.display = 'none';
+      signupStep[prefix] = 3;
+      document.getElementById(prefix + '-step-5').style.display = 'none';
+      document.getElementById(prefix + '-step-4').style.display = 'block';
+      document.querySelector('.su-btn-next[data-prefix="' + prefix + '"]').textContent = '다음';
       renderSignupStepper(prefix);
       window.scrollTo(0, 0);
     });
   });
 
+  // ---- 단계 전환 메인 핸들러 ----
+  document.querySelectorAll('.su-btn-next').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prefix = btn.dataset.prefix;
+      const step = signupStep[prefix];
+
+      if(step === 0){
+        signupStep[prefix] = 1;
+        document.getElementById(prefix + '-step-1').style.display = 'none';
+        document.getElementById(prefix + '-step-2').style.display = 'block';
+        btn.textContent = '다음';
+        btn.disabled = true;
+        renderSignupStepper(prefix);
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if(step === 1){
+        signupStep[prefix] = 2;
+        document.getElementById(prefix + '-step-2').style.display = 'none';
+        document.getElementById(prefix + '-step-3').style.display = 'block';
+        btn.disabled = true;
+        renderSignupStepper(prefix);
+        window.scrollTo(0, 0);
+        runAdminDataFetch(prefix);
+        return;
+      }
+
+      if(step === 2){
+        signupStep[prefix] = 3;
+        document.getElementById(prefix + '-step-3').style.display = 'none';
+        document.getElementById(prefix + '-step-4').style.display = 'block';
+        btn.disabled = false;
+        renderSignupStepper(prefix);
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if(step === 3){
+        const scope = document.getElementById(prefix + '-step-4');
+        const requiredInputs = Array.from(scope.querySelectorAll('.su-required'));
+        if(requiredInputs.some(inp => !inp.value.trim())){ toast('필수 항목을 모두 입력하세요'); return; }
+        const pw = document.getElementById(prefix + '-pw').value;
+        const pw2 = document.getElementById(prefix + '-pw2').value;
+        if(pw !== pw2){ toast('비밀번호가 일치하지 않습니다'); return; }
+        if(isBizPrefix(prefix)){
+          const holder = document.getElementById(prefix + '-account-holder');
+          if(!holder.classList.contains('ok')){ toast('정산계좌 예금주 확인을 완료하세요'); return; }
+        }
+        signupStep[prefix] = 4;
+        scope.style.display = 'none';
+        document.getElementById(prefix + '-step-5').style.display = 'block';
+        renderSignupFinalRecap(prefix);
+        btn.textContent = '제출하기';
+        renderSignupStepper(prefix);
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if(step === 4){
+        signupPendingSubmitPrefix = prefix;
+        document.getElementById('btn-open-signup-submit-modal').click();
+        return;
+      }
+    });
+  });
+
+  document.getElementById('signup-submit-confirm').addEventListener('click', () => {
+    const prefix = signupPendingSubmitPrefix;
+    if(!prefix) return;
+    signupStep[prefix] = 5;
+    document.getElementById(prefix + '-step-5').style.display = 'none';
+    document.getElementById(prefix + '-step-done').style.display = 'block';
+    document.getElementById(prefix + '-nav').style.display = 'none';
+    renderSignupStepper(prefix);
+    document.getElementById('signup-submit-cancel').click();
+    signupPendingSubmitPrefix = null;
+    window.scrollTo(0, 0);
+  });
+  document.getElementById('signup-submit-cancel').addEventListener('click', () => { signupPendingSubmitPrefix = null; });
+
   function resetSignupSubForm(prefix){
     signupStep[prefix] = 0;
     const step1 = document.getElementById(prefix + '-step-1');
     const step2 = document.getElementById(prefix + '-step-2');
+    const step3 = document.getElementById(prefix + '-step-3');
+    const step4 = document.getElementById(prefix + '-step-4');
+    const step5 = document.getElementById(prefix + '-step-5');
     document.getElementById(prefix + '-step-done').style.display = 'none';
     document.getElementById(prefix + '-nav').style.display = 'flex';
     step1.style.display = 'block';
     step2.style.display = 'none';
+    step3.style.display = 'none';
+    step4.style.display = 'none';
+    step5.style.display = 'none';
+
     const nextBtn = document.querySelector('.su-btn-next[data-prefix="' + prefix + '"]');
     nextBtn.textContent = '동의하기';
     nextBtn.disabled = true;
+
     step1.querySelector('.su-agree-all').checked = false;
     step1.querySelectorAll('.su-term').forEach(t => t.checked = false);
-    step2.querySelectorAll('input[type="text"], input[type="password"], input[type="number"]').forEach(inp => { inp.value = ''; });
-    step2.querySelectorAll('input[type="password"]').forEach(inp => { inp.type = 'password'; });
-    step2.querySelectorAll('.pw-toggle').forEach(b => { b.textContent = '표시'; });
-    step2.querySelectorAll('select').forEach(sel => { sel.selectedIndex = 0; });
-    step2.querySelectorAll('input[type="radio"]').forEach((r, i) => { r.checked = (i === 0); });
-    const status = document.getElementById(prefix + '-id-status');
-    status.textContent = '4~16자 까지 영문/숫자만 허용';
-    status.style.color = '';
+
+    const bizStatus = document.getElementById(prefix + '-biz-status');
+    if(bizStatus){ bizStatus.className = 'auth-status-badge'; bizStatus.textContent = ''; }
+    const personStatus = document.getElementById(prefix + '-person-auth-status');
+    if(personStatus){ personStatus.className = 'auth-status-badge'; personStatus.textContent = ''; }
+
+    const adminLoading = document.getElementById(prefix + '-admin-loading');
+    const adminResult = document.getElementById(prefix + '-admin-result');
+    if(adminLoading) adminLoading.style.display = 'none';
+    if(adminResult) adminResult.style.display = 'none';
+
+    const holder = document.getElementById(prefix + '-account-holder');
+    if(holder){ holder.textContent = ''; holder.classList.remove('ok'); }
+
+    [step2, step4].forEach(scope => {
+      if(!scope) return;
+      scope.querySelectorAll('input[type="text"], input[type="password"], input[type="number"], input[type="tel"]').forEach(inp => { inp.value = ''; });
+      scope.querySelectorAll('input[type="password"]').forEach(inp => { inp.type = 'password'; });
+      scope.querySelectorAll('.pw-toggle').forEach(b => { b.textContent = '표시'; });
+      scope.querySelectorAll('select').forEach(sel => { sel.selectedIndex = 0; });
+      scope.querySelectorAll('input[type="radio"]').forEach((r, i) => { r.checked = (i === 0); });
+    });
+
+    const idStatus = document.getElementById(prefix + '-id-status');
+    if(idStatus){ idStatus.textContent = '4~16자 까지 영문/숫자만 허용'; idStatus.style.color = ''; }
+
     renderSignupStepper(prefix);
   }
 

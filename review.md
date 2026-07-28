@@ -246,3 +246,92 @@ Two environmental notes (not defects): the browser tool's tab cap was already re
 ### Overall verdict
 
 **PASS — ready to commit.** The mobile hamburger nav's 사이트맵 button and the old `#mobile-mygov-links` row are both fully removed from `#mobile-nav`, with the desktop header sitemap button, footer sitemap link, and `#sitemap-overlay` modal all untouched. The new 마이메뉴 tab/panel is hidden for guests, correctly appears (positioned after 센터소개) and populates with the right role-based links on login for company (마이페이지 group) and admin/staff (캠코 관리자 group), correctly disappears on logout, navigates correctly on link click (closing the mobile nav as expected), and does not break the existing tab-click scroll behavior for the 5 original tabs. The desktop MyGOV dropdown regression check also passes — same shared data source, unaffected by this change.
+
+## 회원가입 PRD 반영 (6단계 재설계)
+
+### Scope confirmed in source
+
+`index.html` lines 807-1342 (`data-screen="signup"`) implement the redesigned 6-step flow (0 약관동의 → 1 본인/기업인증 → 2 행정정보자동조회 → 3 부가정보입력 → 4 최종확인 → 5 가입완료) across all 3 member-type tabs/prefixes: `su-co` (기업회원, lines 824-1000), `su-inv` (투자자회원, lines 1002-1151), `su-pt` (협약기관, lines 1153-1338). The controlling JS is at lines 3790-4160 (`SIGNUP_PREFIXES`, `signupStep`, `runBizStatusCheck`, `runPersonAuth`, `runAdminDataFetch`, `runAccountVerify`, `renderSignupFinalRecap`, the `.su-btn-next` step-transition handler, `resetSignupSubForm`, `switchSignupTab`). The submit-confirm modal (`#signup-submit-confirm-modal`, lines 2884-2898) and the tab-switch-confirm modal (`#signup-tab-switch-modal`, lines 2858-2872) are also part of this feature.
+
+### What was tested
+
+Tool: `mcp__Claude_Browser` against `file:///C:/Users/tagi7/Desktop/claude_exam/product-claude-kamco/index.html`, driving every interaction via `element.click()` / direct property assignment through `javascript_tool` (per this sandbox's documented click-registration caveat — coordinate/ref `computer` clicks don't reliably register as trusted here). `location.hash = '#/signup'` was used to enter the screen (fake-SPA hash router).
+
+**Session interruption / redo:** this review's browser session was interrupted partway through (after fully completing 기업회원 and 투자자회원 manually) and the preview pane was lost entirely (`tabs_context` returned "No preview is open"). Per instruction, the entire checklist was **restarted from scratch in a brand-new preview session** rather than trusting the partial pre-interruption results, so everything reported below comes from one continuous, fresh run.
+
+**Stale-tab / stale-reload artifact encountered and resolved:** while doing the mobile (375px) pass, a `location.reload(true)` on the already-used tab did **not** actually reset the page's in-memory JS/DOM state (the tab-switch state from a prior step "leaked" through the reload — `panel-signup-pt` was still the active panel even though the markup/URL looked fresh), which briefly looked like a rendering bug (a status badge with `getClientRects().length === 0`). Re-verified in a genuine brand-new tab (`tabs_create` → fresh `navigate`) and confirmed the badge renders correctly (309×19.5px, fully in-viewport) — this was purely the documented sandbox reload artifact, not an app defect. All results below for the mobile pass come from the clean fresh-tab run.
+
+Viewports tested: 1280×900 (desktop, full 3-tab walkthrough) and 375×812 (mobile, overflow/rendering spot-check through 기업회원's steps 0-4). No console errors (`read_console_messages`) were observed at any point in either tab.
+
+### Results by tab
+
+#### 기업회원 (su-co)
+
+| # | Checklist item | Result |
+|---|---|---|
+| 1 | 약관동의: 다음 disabled until all 4 required checked; one-missing keeps it disabled; 모두 동의합니다 toggles all 4 required + 2 optional; re-unchecking one required re-disables | **PASS** |
+| 2 | 사업자 상태 확인하기 (normal `123-45-67890`) → "checking" badge → after ~1.2s `ok`/"계속사업자로 확인되었습니다"; 본인인증하기 → "checking" → after ~0.8s `ok`/"본인인증 완료"; 다음 disabled with only one of the two done, enabled only after both | **PASS** |
+| 2b | Cutoff scenario `999-99-99999` | **FAIL — see Bug #1 below.** Badge shows `ok`/success text, not `fail`, and 다음 stays eligible to enable (i.e. the cutoff never triggers) |
+| 3 | 행정정보자동조회: loading → (~1s) result card; `su-co-admin-rep-name` shows the step-1 name (홍길동); 다음 disabled during loading, enabled after | **PASS** |
+| 4 | 부가정보입력: empty-required-fields → toast "필수 항목을 모두 입력하세요", no advance; pw≠pw2 → toast "비밀번호가 일치하지 않습니다", no advance; 예금주 확인 (계좌 `110123456789`) → after ~0.8s shows "홍길동 (확인됨)" with class `ok`; without verifying, 다음 blocked with toast "정산계좌 예금주 확인을 완료하세요"; after verifying, 다음 advances | **PASS** |
+| 5 | 최종확인: recap fields (`su-co-name`, `su-co-brn`, `su-co-phone`, `su-co-id`, `su-co-account-no`) all show actual entered values, not "-"; button reads "제출하기"; clicking opens confirm modal ("가입 신청을 제출하시겠습니까?"); 취소 closes modal, stays on step 4 (최종확인); re-open + 제출하기 advances to 완료, nav hidden | **PASS** |
+| 6 | 완료: "기업회원 가입이 완료되었습니다" + 로그인하러 가기 button present | **PASS** |
+| 7 | 수정 link (tested before final submit): returns to step 3 (부가정보입력) with phone/id/pw/account-no/account-holder-verified-state all intact | **PASS** |
+| 8 | Tab-switch reset: switching away from su-co (even from its completed 완료 screen) via the confirm modal fully resets it — step-1 visible, step-done hidden, nav visible, agree-all/terms unchecked, 다음→"동의하기"/disabled, biz-status cleared, phone/account fields cleared | **PASS** |
+
+#### 투자자회원 (su-inv)
+
+| # | Checklist item | Result |
+|---|---|---|
+| — | `#su-inv-brn` / `#su-inv-biz-status` do not exist (`getElementById` returns `null`) — no biz check for this tab | **PASS** |
+| 1 | 약관동의: 4 required terms, agree-all works, 다음 disabled until checked | **PASS** |
+| 2 | 본인인증: name (김투자) + birth (19900101) + 본인인증하기 → "인증 중..." → after ~0.8s `ok`/"본인인증 완료"; 다음 enabled only after | **PASS** |
+| 3 | 행정정보자동조회 (실명확인): loading → result; `su-inv-admin-person-name` = "김투자", `su-inv-admin-person-birth` = "19900101" (both match step-1 input) | **PASS** |
+| 4 | 부가정보입력: empty → toast, blocked; pw≠pw2 → toast, blocked; after correction, advances | **PASS** |
+| 5 | 최종확인: recap (`su-inv-name`, `su-inv-birth`, `su-inv-type`, `su-inv-id`) shows real values; 제출하기 → modal → 취소 stays put → re-submit → 완료, nav hidden | **PASS** |
+| 6 | 완료: "투자자회원 가입이 완료되었습니다" + 로그인하러 가기 | **PASS** |
+| 7 | 수정: returns to step 3 with id/pw intact | **PASS** |
+| 8 | Tab-switch reset (su-inv → su-pt, from su-inv's 완료 screen): step-1 visible again, 다음 disabled, done-screen hidden | **PASS** |
+
+#### 협약기관 (su-pt)
+
+| # | Checklist item | Result |
+|---|---|---|
+| 1 | 약관동의: **5** required terms (온기업 이용약관/개인정보/마이데이터/행정정보공동이용/위탁과업수행기관준수사항) + 2 optional; agree-all works, 다음 disabled until all 5 checked | **PASS** |
+| 2 | 사업자 상태 확인하기 (`123-45-67890`) → ok after ~1.2s; 본인인증하기 (이감정) → ok after ~0.8s; 다음 disabled with only one done, enabled after both | **PASS** |
+| 3 | 행정정보자동조회: `su-pt-admin-rep-name` = "이감정" (matches step-1 name) | **PASS** |
+| 4 | 부가정보입력: empty → toast; pw≠pw2 → toast; 예금주 확인 (계좌 `110987654321`) → "이감정 (확인됨)" class `ok`; blocked without it (toast "정산계좌 예금주 확인을 완료하세요") | **PASS** |
+| 5 | 최종확인: recap (`su-pt-name`, `su-pt-brn`, `su-pt-org-type`, `su-pt-phone`, `su-pt-id`, `su-pt-account-no`) all real values; submit modal 취소/제출하기 flow correct | **PASS** |
+| 6 | 완료: "협약기관 가입이 완료되었습니다" + 로그인하러 가기 | **PASS** |
+| 7 | 수정: returns to step 3 with phone/id/account-holder intact | **PASS** |
+
+Note: the cutoff scenario (999-99-99999) was tested once on su-co per the checklist's instruction. It shares the exact same `runBizStatusCheck` function as su-pt (both are `isBizPrefix`), so Bug #1 below applies identically to su-pt — not re-tested a second time there to avoid redundant evidence, but it is the same code path.
+
+### Also checked
+
+- **Desktop (1280px):** `#/signup` loads with `scrollWidth` (1265) ≤ `innerWidth` (1280) — no horizontal overflow. `#signup-stepper-co` renders all 6 steps with correct labels (약관동의/본인인증/정보 자동조회/부가정보입력/최종확인/가입완료).
+- **Mobile (375px):** fresh-tab retest confirmed `scrollWidth === innerWidth === 375` at step 0 (stepper, 6 items), step 1 (status badge after 사업자 상태 확인, rect 309×19.5, fully in-viewport), step 2 (두 result cards, each 309px wide, no clipping), and step 3 최종확인 (`signup-stepper-co` width 343 < 375, no overflow). No cards/badges clipped at any tested step.
+- **Console errors:** none observed (`read_console_messages` with `onlyErrors:true`) across the entire desktop run (all 3 tabs, full flow, submissions) or the mobile run.
+
+### Bugs found
+
+**Bug #1 — 휴폐업 사업자 cutoff test value never triggers the failure path (su-co and su-pt).**
+
+- **Where:** `index.html` line 3879, inside `runBizStatusCheck(prefix)`:
+  ```js
+  if(val.replace(/-/g, '') === '999999999'){
+  ```
+- **Repro:** On su-co (or su-pt) step 1 (본인/기업인증), type exactly `999-99-99999` into the business-registration-number field — this is the **exact value the screen's own on-screen hint text instructs testers to use** ("테스트를 위해 사업자등록번호에 999-99-99999를 입력하면 휴폐업 사업자 시나리오를 확인할 수 있습니다.", visible at both `su-co-step-2` and `su-pt-step-2`). Click 사업자 상태 확인하기, wait ~1.3s.
+- **Expected:** badge shows `fail` class + "휴폐업 상태로 확인되어 가입을 진행할 수 없습니다", plus a toast, and 다음 stays blocked.
+- **Actual:** badge shows `ok` class + "계속사업자로 확인되었습니다" (the success path) — confirmed twice, independently, in two separate fresh browser sessions.
+- **Root cause:** `'999-99-99999'.replace(/-/g, '')` produces `'9999999999'` (10 digits/nines — matching the 10-digit format used everywhere else in this form, e.g. the field's own placeholder `000-00-00000` = 3+2+5 = 10 digits), but the comparison literal in the code, `'999999999'`, is only **9** nines/digits — one digit short. The strings can never be equal, so the failure branch is dead code as currently written; the documented QA/demo scenario for this cutoff is broken.
+- **Fix suggestion (not applied — review only):** change the literal on line 3879 to `'9999999999'` (10 nines) to match the 10-digit BRN format and the on-screen instructions.
+- **Scope of impact:** affects both `su-co` and `su-pt` (both share `isBizPrefix` / `runBizStatusCheck`); does not affect `su-inv` (no biz check on that tab).
+
+No other functional bugs were found. All other checklist items (agree-all toggle, per-required-checkbox gating, dual-gate on 다음 in step 1, admin-data auto-fill matching step-1 input, step-3 required/password/account validations and their toasts, 최종확인 recap accuracy, 수정 preserving entered values, submit-modal cancel/confirm, completion screen copy + 로그인하러 가기, and tab-switch full-reset) passed on all 3 tabs.
+
+### Overall verdict
+
+**Bug #1 fixed.** `runBizStatusCheck`'s cutoff literal (`index.html:3879`) was corrected from `'999999999'` (9 digits) to `'9999999999'` (10 digits, matching the stripped form of `999-99-99999`). Re-verified directly in a fresh browser session: entering `999-99-99999` now yields `class="auth-status-badge fail"` / "휴·폐업 상태로 확인되어 가입을 진행할 수 없습니다", and a normal number (e.g. `123-45-67890`) still yields `class="auth-status-badge ok"` / "계속사업자로 확인되었습니다" (no regression). Since `su-co` and `su-pt` share the same `runBizStatusCheck` function, the fix applies to both.
+
+**Ready to commit.** Everything in the redesigned 6-step signup flow — across all 3 member-type tabs, all step transitions, all validation/toast paths, the 수정 (edit) round-trip, the submit-confirm modal, the tab-switch-confirm-and-reset flow, mobile/desktop responsive rendering, and now the 휴·폐업 cutoff scenario — passes with no known defects and no console errors.
