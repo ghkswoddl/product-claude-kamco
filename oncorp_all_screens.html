@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>온기업(OnCorp) 화면설계서 - SFR-온기업-002~032</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  body{font-family:'Pretendard','Noto Sans KR',sans-serif;}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+  [data-lucide]{width:16px;height:16px;display:inline-block;vertical-align:-3px}
+</style>
+</head>
+<body class="bg-gray-100 m-0">
+<div id="app" class="flex min-h-screen"></div>
+
+<script>
+/* =========================================================
+   온기업(OnCorp) 화면설계서 — HTML/CSS/JavaScript (Vanilla) 버전
+   SFR-온기업-002 ~ 032 전체 31개 화면 + 상세페이지 + 해시 라우터
+   ========================================================= */
+const NAVY = "#005088";
+const NAVY_DARK = "#003a63";
+
+/* ---------- 공통 렌더 헬퍼 ---------- */
+function esc(s){ return (s===undefined||s===null) ? "" : String(s); }
+
+function badge(text, tone){
+  tone = tone || "blue";
+  const tones = {
+    blue: "bg-blue-50 text-[#0C447C]",
+    gray: "bg-gray-100 text-gray-600",
+    red: "bg-red-50 text-red-700",
+    amber: "bg-amber-50 text-amber-700",
+    green: "bg-green-50 text-green-700",
+  };
+  return `<span class="text-[11px] px-2 py-0.5 rounded ${tones[tone]} font-medium">${esc(text)}</span>`;
+}
+
+function statusPill(label, tone){
+  tone = tone || "gray";
+  const map = {
+    gray: "bg-gray-100 text-gray-600",
+    blue: "bg-blue-50 text-blue-700",
+    green: "bg-green-50 text-green-700",
+    amber: "bg-amber-50 text-amber-700",
+    red: "bg-red-50 text-red-700",
+  };
+  return `<span class="text-[11px] px-2 py-0.5 rounded-full font-medium ${map[tone]}">${esc(label)}</span>`;
+}
+
+function screenHeader(sfr, name, screenId, note){
+  return `
+  <div class="mb-5">
+    <div class="flex items-center gap-2 mb-1">${badge(sfr,"blue")}${badge(screenId,"gray")}</div>
+    <h1 class="text-lg font-medium text-gray-900">${esc(name)}</h1>
+    ${note ? `<p class="text-xs text-gray-500 mt-1">${esc(note)}</p>` : ""}
+  </div>`;
+}
+
+function card(opts){
+  const icon = opts.icon ? `<i data-lucide="${opts.icon}" style="color:${NAVY}"></i>` : "";
+  const tag = opts.tag ? `<span class="ml-auto">${opts.tag}</span>` : "";
+  return `
+  <div class="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+    <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
+      ${icon}<h2 class="text-[15px] font-medium text-gray-900">${esc(opts.title)}</h2>${tag}
+    </div>
+    ${opts.content}
+  </div>`;
+}
+
+function field(label, opts){
+  opts = opts || {};
+  return `
+  <div class="mb-3">
+    <label class="text-[13px] font-medium text-gray-700 block mb-1.5">${esc(label)} ${opts.required ? '<span class="text-red-600">*</span>' : ""}</label>
+    ${opts.content}
+    ${opts.hint ? `<p class="text-[11px] text-gray-400 mt-1">${esc(opts.hint)}</p>` : ""}
+  </div>`;
+}
+
+function inputEl(attrs){
+  attrs = attrs || "";
+  return `<input ${attrs} class="w-full border border-gray-300 rounded-md px-3 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#005088]" />`;
+}
+function textareaEl(attrs, val){
+  attrs = attrs || "";
+  return `<textarea ${attrs} class="w-full border border-gray-300 rounded-md p-2 text-[13px]">${esc(val||"")}</textarea>`;
+}
+function selectEl(options, attrs){
+  attrs = attrs || "";
+  return `<select ${attrs} class="w-full border border-gray-300 rounded-md px-3 py-2 text-[13px] bg-white">${options.map(o=>`<option>${esc(o)}</option>`).join("")}</select>`;
+}
+
+function btn(text, opts){
+  opts = opts || {};
+  const size = opts.small ? "px-3 py-1.5 text-[12px]" : "px-4 py-2 text-[13px]";
+  const tone = opts.primary ? "text-white border border-transparent" : "text-gray-700 border border-gray-300 bg-white hover:bg-gray-50";
+  const style = opts.primary ? `style="background:${NAVY}"` : "";
+  const icon = opts.icon ? `<i data-lucide="${opts.icon}" class="w-[14px] h-[14px]"></i>` : "";
+  const onclick = opts.onclick ? `onclick="${opts.onclick}"` : "";
+  return `<button ${onclick} ${style} class="inline-flex items-center gap-1.5 rounded-md font-medium ${size} ${tone}">${icon}${esc(text)}</button>`;
+}
+
+function table(cols, rows, rowPaths){
+  const thead = cols.map(c=>`<th class="text-left font-medium px-3 py-2 border-b border-gray-200">${esc(c)}</th>`).join("");
+  const trs = rows.map((r,i)=>{
+    const path = rowPaths && rowPaths[i];
+    const cls = path ? "border-b border-gray-100 last:border-0 cursor-pointer hover:bg-blue-50/60" : "border-b border-gray-100 last:border-0";
+    const onclick = path ? `onclick="navigate('${path}')"` : "";
+    return `<tr ${onclick} class="${cls}">${r.map(c=>`<td class="px-3 py-2 text-gray-700">${c}</td>`).join("")}</tr>`;
+  }).join("");
+  return `<div class="border border-gray-200 rounded-lg overflow-hidden"><table class="w-full text-[12px]"><thead><tr class="bg-gray-50 text-gray-500">${thead}</tr></thead><tbody>${trs}</tbody></table></div>`;
+}
+
+function tabs(items, active){
+  return `<div class="flex gap-1 mb-4 border-b border-gray-200">${items.map(t=>{
+    const on = t===active;
+    return `<div class="px-3 py-2 text-[13px] font-medium border-b-2 ${on?"border-[#005088] text-[#005088]":"border-transparent text-gray-500"}">${esc(t)}</div>`;
+  }).join("")}</div>`;
+}
+
+function checklist(items){
+  return `<div class="space-y-2">${items.map((it,i)=>`
+    <label class="flex items-center gap-2 text-[13px] text-gray-700">
+      <input type="checkbox" ${i%2===0?"checked":""} class="rounded border-gray-300" /> ${esc(it)}
+    </label>`).join("")}</div>`;
+}
+
+function ipNotice(){
+  return `<div class="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-[12px] text-amber-800 mb-4">
+    <i data-lucide="shield-check" class="w-[14px] h-[14px]"></i>
+    지정된 IP에서만 접속 가능한 특수고객 창구입니다 (SFR-온기업-002 인증 정책)
+  </div>`;
+}
+
+function backBar(to, label){
+  return `<button onclick="navigate('${to}')" class="flex items-center gap-1.5 text-[12px] font-medium text-gray-500 hover:text-[#005088] mb-4">
+    <i data-lucide="arrow-left" class="w-[14px] h-[14px]"></i> ${esc(label)} 목록으로
+  </button>`;
+}
+
+function infoGrid(items){
+  return `<div class="grid grid-cols-2 gap-x-6 gap-y-3">${items.map(([l,v])=>`
+    <div><p class="text-[11px] text-gray-400 mb-0.5">${esc(l)}</p><p class="text-[13px] text-gray-800 font-medium">${v}</p></div>`).join("")}</div>`;
+}
+
+function timeline(steps, current){
+  return `<div class="flex items-center">${steps.map((s,i)=>{
+    const active = i<=current;
+    const circle = i<current
+      ? `<i data-lucide="check-circle-2" class="w-[14px] h-[14px]"></i>`
+      : String(i+1);
+    const circleCls = active ? "w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium text-white" : "w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium bg-white border border-gray-300 text-gray-400";
+    const circleStyle = active ? `style="background:${NAVY}"` : "";
+    const label = `<span class="text-[10.5px] mt-1.5 text-center ${active?"font-medium":"text-gray-400"}" ${active?`style="color:${NAVY}"`:""}>${esc(s)}</span>`;
+    const bar = i<steps.length-1 ? `<div class="flex-1 h-0.5 mb-5" style="background:${i<current?NAVY:"#E5E7EB"}"></div>` : "";
+    return `<div class="flex flex-col items-center flex-1"><div ${circleStyle} class="${circleCls}">${circle}</div>${label}</div>${bar}`;
+  }).join("")}</div>`;
+}
+
+function gnbHtml(title, sub){
+  return `
+  <div>
+    <div class="flex items-center justify-between px-6 h-14 text-white" style="background:${NAVY}">
+      <div class="flex items-center gap-2.5">
+        <div class="w-6 h-6 bg-white rounded flex items-center justify-center text-[12px] font-medium" style="color:${NAVY}">캠</div>
+        <span class="text-[15px] font-medium">온기업(OnCorp)</span>
+        ${sub ? `<span class="text-white bg-white/20 px-2 py-0.5 rounded text-[11px] font-medium">${esc(sub)}</span>` : ""}
+      </div>
+      <div class="flex items-center gap-4 text-[12px] text-blue-100">
+        <i data-lucide="bell" class="w-[15px] h-[15px]"></i>
+        <span>My Page</span>
+        <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center"><i data-lucide="user" class="w-[14px] h-[14px]"></i></div>
+      </div>
+    </div>
+    <div class="bg-white px-6 py-2 text-[12px] text-gray-500 border-b border-gray-200 flex items-center gap-1.5">
+      <i data-lucide="home" class="w-[13px] h-[13px]"></i><span>홈</span><i data-lucide="chevron-right" class="w-[12px] h-[12px]"></i><span style="color:${NAVY}" class="font-medium">${esc(title)}</span>
+    </div>
+  </div>`;
+}
+
+function shell(gnbTitle, gnbSub, content){
+  return `<div class="bg-[#F5F7FA] rounded-xl overflow-hidden border border-gray-200">${gnbHtml(gnbTitle, gnbSub)}<div class="p-7">${content}</div></div>`;
+}
+
+/* ---------- 화면 정의 목록 ---------- */
+const SCREENS = [
+  { id:"002", group:"일반 회원", name:"회원가입", screenId:"ONC-SCR-002" },
+  { id:"003", group:"일반 회원", name:"로그인 / 로그아웃", screenId:"ONC-SCR-003" },
+  { id:"004", group:"일반 회원", name:"게시판 (공지/Q&A/자료실)", screenId:"ONC-SCR-004" },
+  { id:"005", group:"일반 회원", name:"사업 안내", screenId:"ONC-SCR-005" },
+  { id:"006", group:"일반 회원", name:"맞춤형 사업 추천", screenId:"ONC-SCR-006" },
+  { id:"007", group:"일반 회원", name:"챗봇 서비스", screenId:"ONC-SCR-007" },
+  { id:"008", group:"투자자 매칭", name:"투자자 매칭 지원", screenId:"ONC-SCR-008" },
+  { id:"009", group:"일반 회원", name:"상담 신청", screenId:"ONC-SCR-009" },
+  { id:"010", group:"일반 회원", name:"자가진단", screenId:"ONC-SCR-010" },
+  { id:"011", group:"일반 회원", name:"사업 신청", screenId:"ONC-SCR-011" },
+  { id:"012", group:"일반 회원", name:"My Page", screenId:"ONC-SCR-012" },
+  { id:"013", group:"관리자", name:"게시판 관리", screenId:"ONC-SCR-013" },
+  { id:"014", group:"관리자", name:"시스템 관리", screenId:"ONC-SCR-014" },
+  { id:"015", group:"관리자", name:"상담예약 관리", screenId:"ONC-SCR-015" },
+  { id:"016", group:"관리자", name:"회원 관리", screenId:"ONC-SCR-016" },
+  { id:"017", group:"관리자", name:"기업상담 관리", screenId:"ONC-SCR-017" },
+  { id:"018", group:"관리자", name:"기업신청 관리", screenId:"ONC-SCR-018" },
+  { id:"019", group:"관리자", name:"보고서 관리", screenId:"ONC-SCR-019" },
+  { id:"020", group:"관리자", name:"기타 관리 (동산금융/KODATA/부실징후)", screenId:"ONC-SCR-020" },
+  { id:"021", group:"특수창구 · 자문기관", name:"자문기관 - 의뢰관리", screenId:"ONC-SCR-021" },
+  { id:"022", group:"특수창구 · 펀드운용사", name:"펀드 운용사 일반 (명세관리)", screenId:"ONC-SCR-022" },
+  { id:"023", group:"특수창구 · 펀드운용사", name:"펀드 운용사 - 투자심사 보고", screenId:"ONC-SCR-023" },
+  { id:"024", group:"특수창구 · 펀드운용사", name:"펀드 운용사 - 총회/이사회 보고", screenId:"ONC-SCR-024" },
+  { id:"025", group:"특수창구 · 펀드운용사", name:"펀드 운용사 - 보고사항 보고", screenId:"ONC-SCR-025" },
+  { id:"026", group:"특수창구 · 펀드운용사", name:"펀드 운용사 - 공문 보고", screenId:"ONC-SCR-026" },
+  { id:"027", group:"특수창구 · 펀드운용사", name:"펀드 운용사 - 출자금 납입요청", screenId:"ONC-SCR-027" },
+  { id:"028", group:"특수창구 · 펀드운용사", name:"펀드 운용사 - 투자실적 검증보고", screenId:"ONC-SCR-028" },
+  { id:"029", group:"특수창구 · 펀드운용사", name:"펀드 운용사 - 선박펀드 기타보고", screenId:"ONC-SCR-029" },
+  { id:"030", group:"특수창구 · 펀드운용사", name:"펀드 운용사 - 온라인 출자사업 신청", screenId:"ONC-SCR-030" },
+  { id:"031", group:"특수창구 · 수탁기관", name:"수탁기관 - 운용지시서 관리", screenId:"ONC-SCR-031" },
+  { id:"032", group:"특수창구 · 수탁기관", name:"수탁기관 - 정보대사 관리", screenId:"ONC-SCR-032" },
+];
+
+/* ---------- 보고화면 공용 템플릿 (023~029, 031) ---------- */
+function reportHistory(data, screenId, cols){
+  const rows = data.map(d=>d.row);
+  const paths = data.map(d=>`/${screenId}/${d.id}`);
+  return card({icon:"clock", title:"최근 보고 이력 (클릭 시 상세 조회)", content: table(cols, rows, paths)});
+}
+function reportDetail(item, screenId, sfr, screenLabel, listName){
+  return `
+  ${backBar("/"+screenId, listName)}
+  ${screenHeader(sfr, screenLabel+" 상세", "ONC-SCR-"+screenId, item.title)}
+  ${card({icon:"file-text", title:"보고 기본정보", content: infoGrid(item.info)})}
+  ${card({icon:"refresh-cw", title:"진행상태", content: timeline(["작성","전송","공사 접수","확정"], item.stage)})}
+  ${item.content ? card({icon:"clipboard-list", title:"보고 내용", content:`<p class="text-[13px] text-gray-700 leading-relaxed">${esc(item.content)}</p>`}) : ""}
+  ${card({icon:"paperclip", title:"첨부파일", content:`
+    <div class="flex items-center justify-between border rounded-lg p-3 text-[12px]">
+      <div class="flex items-center gap-2"><i data-lucide="file-text" style="color:${NAVY}"></i>${esc(item.file||"보고서_첨부.pdf")}</div>
+      ${btn("다운로드",{small:true,icon:"download"})}
+    </div>`})}
+  <div class="flex justify-end gap-2">${btn("수정")}${btn("재전송",{primary:true,icon:"send"})}</div>
+  `;
+}
+
+/* ---------- 샘플 데이터 ---------- */
+const NOTICES = [
+  { id:"n1", title:"2026년 기업지원 프로그램 안내", date:"2026-06-10", views:"1,204", writer:"운영자", body:"2026년 하반기 기업자산 유동화인수, 동산담보회수지원 등 주요 기업지원 프로그램의 접수 일정과 지원 규모를 안내드립니다. 자세한 신청요건은 사업 안내 메뉴를 참고하시기 바랍니다.", file:"2026년_기업지원프로그램_안내.pdf" },
+  { id:"n2", title:"홈페이지 개편 안내", date:"2026-06-05", views:"530", writer:"운영자", body:"온기업(OnCorp) 홈페이지가 이용자 편의성 강화를 위해 개편되었습니다. My Page 통합, 챗봇 상담 기능이 신규 추가되었습니다.", file:"홈페이지_개편_안내.pdf" },
+  { id:"n3", title:"여름철 시스템 점검 안내", date:"2026-05-28", views:"412", writer:"운영자", body:"시스템 안정화를 위해 정기 점검이 진행됩니다. 점검 시간 동안 서비스 이용이 제한될 수 있습니다.", file:"정기점검_안내.pdf" },
+];
+const PROGRAMS = [
+  { id:"p1", type:"금융지원", name:"기업지원펀드", summary:"성장자금 대여", target:"중견·중소기업", limit:"최대 100억원", method:"온라인 신청(온기업) + 자가진단 필수", docs:["사업계획서","최근 3개년 재무제표","법인등기부등본","자금사용계획서"] },
+  { id:"p2", type:"금융지원", name:"동산담보회수지원", summary:"동산 담보 회수", target:"회생·구조조정 기업", limit:"감정평가액의 70% 이내", method:"온라인 신청 + 자문기관 감정평가 연계", docs:["동산목록","감정평가의뢰서","담보설정계약서"] },
+  { id:"p3", type:"자산활용", name:"자산매입후재임대(S&LB)", summary:"자산 매각 후 재임대", target:"유동성 필요 기업", limit:"자산가치의 최대 90%", method:"상담 신청 → 자가진단 → 온라인 신청", docs:["부동산등기부등본","감정평가서","임대차 조건 제안서"] },
+  { id:"p4", type:"구조조정", name:"회생·부실징후기업 자금대여", summary:"긴급 운영자금", target:"부실징후 기업", limit:"최대 50억원", method:"온라인 신청 + K-Score 심사 연계", docs:["회생계획인가서","운영자금 소요계획서"] },
+];
+const INVESTORS = [
+  { id:"i1", name:"A자산운용", est:"2015", sector:"제조업", size:"500억", type:"VC", detail:"제조업 중견기업 대상 성장자금 투자 전문. 최근 3년간 12건 투자 집행." },
+  { id:"i2", name:"B파트너스", est:"2018", sector:"IT서비스", size:"1,200억", type:"PE", detail:"IT/플랫폼 기업 바이아웃 및 세컨더리 투자 전문." },
+];
+const CONSULT_HISTORY = [
+  { id:"c1", date:"2026-06-01", mode:"방문", topic:"S&LB", status:"승인", note:"○○공장 부지 매입후 재임대 관련 사전 상담. 담당자 배정 완료.", officer:"박담당" },
+  { id:"c2", date:"2026-05-20", mode:"영상", topic:"DIP금융", status:"완료", note:"회생절차 진행중 운영자금 조달 방안 상담 완료.", officer:"이담당" },
+];
+const MY_APPLICATIONS = [
+  { id:"a1", name:"기업자산 유동화인수", date:"2026-06-10", stage:2, stageLabel:"외부평가", officer:"이담당" },
+  { id:"a2", name:"동산담보회수지원", date:"2026-05-15", stage:4, stageLabel:"계약체결", officer:"박담당" },
+];
+const MY_CONTRACTS = [
+  { id:"k1", program:"기업자산 유동화인수", round:"1/4", amount:"50,000,000원", date:"2026-07-01", status:"납부완료", tone:"green" },
+  { id:"k2", program:"기업자산 유동화인수", round:"2/4", amount:"50,000,000원", date:"2026-10-01", status:"예정", tone:"gray" },
+];
+const QA_ADMIN = [
+  { id:"qa1", title:"신청서류 문의드립니다", writer:"(주)ABC", status:"대기", officer:"-", question:"제출서류 중 재무제표는 최근 몇 개년까지 필요한가요?" },
+  { id:"qa2", title:"진행상태 확인 요청", writer:"(주)XYZ", status:"완료", officer:"이담당", question:"신청한 건의 현재 심사 단계를 확인하고 싶습니다.", answer:"현재 외부평가 단계 진행중이며, 완료 후 개별 안내드릴 예정입니다." },
+];
+const SYS_LOGS = [
+  { id:"l1", time:"2026-06-16 08:12", type:"예외", content:"파일 업로드 실패", status:"처리완료", tone:"green", detail:"20MB 초과 파일 업로드 시도로 인한 예외 발생. 사용자 안내 메시지 정상 노출 확인." },
+  { id:"l2", time:"2026-06-16 09:03", type:"접속", content:"접속자수 1,204", status:"정상", tone:"gray", detail:"일일 피크 접속자 통계. 특이 트래픽 없음." },
+];
+const RESERVATIONS = [
+  { id:"r1", company:"(주)ABC", mode:"방문", date:"2026-06-20 14:00", topic:"S&LB", status:"승인대기", officer:"미배정", memo:"○○공장 부지 매각후 재임대 관련 초기 상담 희망" },
+];
+const MEMBERS = [
+  { id:"m1", type:"펀드운용사", name:"캠코선박운용(주)", regno:"110111-2222222", period:"2025~2027", status:"이용중", tone:"green", ceo:"정운용", contact:"02-1234-5678" },
+  { id:"m2", type:"자문기관", name:"○○회계법인", regno:"110111-3333333", period:"2026~2026", status:"승인대기", tone:"amber", ceo:"최대표", contact:"02-2222-3333" },
+];
+const CORP_CUSTOMERS = [
+  { id:"cc1", name:"(주)ABC", consults:"4", applications:"2", lastContact:"2026-06-14", history:["2026-06-14 유선상담 - 자금조달 문의","2026-05-02 방문상담 - S&LB 사전상담"] },
+];
+const ADMIN_APPLICATIONS = [
+  { id:"aa1", company:"(주)ABC", program:"기업자산 유동화인수", date:"2026-06-10", status:"사전검토", tone:"blue", officer:"이담당", stage:1, docs:["사업계획서.hwp","재무제표.pdf","법인등기부등본.pdf"] },
+  { id:"aa2", company:"(주)XYZ", program:"동산담보회수지원", date:"2026-06-12", status:"접수", tone:"gray", officer:"미배정", stage:0, docs:["동산목록.xlsx"] },
+];
+const KODATA_LIST = [
+  { id:"kd1", name:"(주)회생1", court:"서울회생법원", stage:"회생계획인가", score:"부실", tone:"red", detail:"회생계획 인가 후 변제계획 이행 중. K-Score 최근 재평가 결과 부실 등급 유지." },
+];
+const DISTRESS_LIST = [
+  { id:"ds1", name:"(주)ABC", year:"2026", verdict:"판정유보", tone:"amber", detail:"재무건전성 지표 일부 기준 미달로 추가 자료 요청 후 재판정 예정." },
+];
+const REQUESTS = [
+  { id:"rq1", program:"S&LB 자산평가", date:"2026-06-05", officer:"박담당", reqtype:"감정평가", title:"○○공장 감정평가 의뢰", status:"진행중", tone:"blue", content:"○○공장 부지 및 건물에 대한 감정평가를 의뢰드립니다. 평가 기준일은 2026-06-30입니다." },
+];
+const FUND_ITEMS = [
+  { id:"f1", name:"펀드 재무제표", date:"2026-06-01", sent:"전송완료", tone1:"blue", confirmed:"확정", tone2:"green", detail:"2026년 1분기 펀드 재무제표 전송 완료 및 공사 확정 처리됨." },
+];
+const R023 = [{ id:"r1", row:["2026-06-01","신주 투자","3,000,000,000원"], title:"A기업 신주 투자심사", stage:2, info:[["펀드구분","기업지원펀드"],["투자심사일","2026-06-01"],["투자유형","신주"],["투자금액","3,000,000,000원"]], content:"A기업 대상 신주 투자심사 완료. 투자계약서 등록 및 전송 처리됨." }];
+const R024 = [{ id:"r1", row:["2026 정기총회","서면결의","2026-05-20"], title:"2026년 정기총회 보고", stage:3, info:[["총회종류","정기총회"],["결의방법","서면결의"],["총회일","2026-05-20"]], content:"예산안·결산보고·임원선임 안건 모두 원안 가결." }];
+const R025 = [{ id:"r1", row:["정기","2026 Q2","2026-06-30"], title:"2026년 2분기 정기보고", stage:1, info:[["보고구분","정기"],["기준분기","2026 Q2"],["제출일","2026-06-30"]], content:"용선사 재무현황 양호, 담보비율 기준 충족. 선박보험 갱신 완료." }];
+const R026 = [{ id:"r1", row:["발신","보고","2026-06-08","접수"], title:"6월 정기보고 발신 공문", stage:1, info:[["공문종류","발신"],["공문유형","보고"],["공문일자","2026-06-08"],["처리현황","접수"]] }];
+const R028 = [{ id:"r1", row:["2026-06-01","월간","일치","-"], title:"2026년 6월 실물검증", stage:3, info:[["검증일","2026-06-01"],["검증주기","월간"],["일치여부","일치"]], content:"펀드 보유자산 실물검증 결과 장부가와 실사가 일치 확인." }];
+const R029 = [{ id:"r1", row:["선박펀드1호","2027-03-01","조기상환","검토중"], title:"선박펀드1호 조기상환 검토", stage:1, info:[["펀드명","선박펀드1호"],["만기일","2027-03-01"],["상환유형","조기상환"]], content:"출자자 요청에 따른 조기상환 가능성 검토 중. 법무 자문 결과 대기." }];
+const R031 = [{ id:"r1", row:["기업지원펀드","출자금 집행지시","2026-06-10","1차 출자금 집행","접수"], title:"1차 출자금 집행지시", stage:1, info:[["펀드구분","기업지원펀드"],["운용지시종류","출자금 집행지시"],["운용지시일","2026-06-10"]], content:"1차 출자금 6,000,000,000원 집행 지시. 수탁기관 계좌 이체 예정." }];
+const ANNOUNCEMENTS = [
+  { id:"an1", name:"2026년 하반기 기업구조혁신펀드", open:"2026-07-01", close:"2026-07-15", review:"2026-07-25", qualify:"펀드운용업 등록 3년 이상, 최소 운용규모 500억원 이상", docs:["제안서","운용사 실적증명서","재무제표"] },
+];
+const RECON_ITEMS = [
+  { id:"rc1", label:"계좌 잔고", sysval:"12,540,000,000원", trustval:"12,540,000,000원", match:"일치", tone:"green" },
+  { id:"rc2", label:"보유 자산내역", sysval:"선박펀드1호 지분 60%", trustval:"선박펀드1호 지분 60%", match:"일치", tone:"green" },
+  { id:"rc3", label:"입출금 내역", sysval:"3건", trustval:"2건", match:"불일치", tone:"red", memo:"공사 시스템상 3건 중 1건(2026-06-14 이체)이 수탁기관 원장에 미반영. 확인 요청 발송함." },
+];
+
+/* ---------- 화면 렌더러 (각 함수는 화면 전체 HTML 문자열 반환) ---------- */
+const SCREEN_RENDER = {
+
+"002": function(){
+  return shell("회원가입", null, `
+  ${screenHeader("SFR-온기업-002","회원가입","ONC-SCR-002","고객 유형별 별도 가입 절차 · 투자자/특수고객은 담당자 허가 후 완료")}
+  ${card({icon:"users", title:"1. 회원 유형 선택", content:`
+    <div class="grid grid-cols-3 gap-3">
+      <div class="border rounded-lg p-4 text-center border-gray-200"><p class="text-[13px] font-medium mb-1">일반기업 회원</p>${badge("즉시가입","green")}</div>
+      <div class="border rounded-lg p-4 text-center border-gray-200"><p class="text-[13px] font-medium mb-1">투자자 회원</p>${badge("담당자 승인 필요","amber")}</div>
+      <div class="border rounded-lg p-4 text-center border-gray-200"><p class="text-[13px] font-medium mb-1">특수고객 (펀드/자문)</p>${badge("담당자 승인 필요","amber")}</div>
+    </div>`})}
+  ${card({icon:"file-check-2", title:"2. 약관 · 개인정보 동의", content: checklist(["이용약관 동의 (필수)","개인정보 수집·이용 동의 (필수)","마케팅 정보 수신 동의 (선택)"])})}
+  ${card({icon:"lock", title:"3. 본인/기업 인증", content:`
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <button class="border border-gray-300 rounded-md py-2 text-[12px]">공동인증서</button>
+      <button class="border border-gray-300 rounded-md py-2 text-[12px]">휴대폰 인증</button>
+      <button class="border border-gray-300 rounded-md py-2 text-[12px]">간편인증</button>
+    </div>
+    <p class="text-[11px] text-gray-400">공동인증서 등록/삭제, 안내/신청, 내보내기, Active-X 수동설치 기능 포함</p>`})}
+  ${card({icon:"building-2", title:"4. 회원정보 입력", content:`
+    <div class="grid grid-cols-2 gap-4">
+      ${field("법인명",{required:true,content:inputEl('placeholder="(주)캠코파트너스"')})}
+      ${field("법인등록번호",{required:true,content:inputEl('placeholder="110111-1234567"')})}
+      ${field("담당자명",{required:true,content:inputEl('placeholder="홍길동"')})}
+      ${field("대표자명",{required:true,content:inputEl('placeholder="김대표"')})}
+    </div>
+    <p class="text-[11px] text-gray-400 mt-2">※ 기업 기본정보/재무정보는 기업정보 조회 서비스와 연동하여 자동입력 (필요 시 수정)</p>`})}
+  <div class="flex justify-end gap-2">${btn("이전")}${btn("가입 신청 완료",{primary:true,icon:"check-circle-2"})}</div>
+  `);
+},
+
+"003": function(){
+  return shell("로그인", null, `
+  ${screenHeader("SFR-온기업-003","로그인 / 로그아웃","ONC-SCR-003","다양한 인증수단 · 5회 오류 시 추가 인증 · 일정시간 미사용 자동 로그아웃")}
+  <div class="max-w-md mx-auto">
+    ${card({icon:"lock", title:"로그인", content:`
+      ${tabs(["일반기업","투자자","특수고객"],"일반기업")}
+      ${field("아이디",{required:true,content:inputEl('placeholder="아이디를 입력하세요"')})}
+      ${field("비밀번호",{required:true,content:inputEl('type="password" placeholder="••••••••"')})}
+      <div class="flex items-center gap-2 mb-3 text-[12px] text-gray-500"><input type="checkbox" class="rounded" /> 아이디 저장</div>
+      <button style="background:${NAVY}" class="w-full justify-center inline-flex items-center gap-1.5 rounded-md font-medium px-4 py-2 text-[13px] text-white">로그인</button>
+      <div class="grid grid-cols-3 gap-2 mt-3">
+        <button class="border rounded-md py-1.5 text-[11px] text-gray-600">디지털원패스</button>
+        <button class="border rounded-md py-1.5 text-[11px] text-gray-600">공동인증서</button>
+        <button class="border rounded-md py-1.5 text-[11px] text-gray-600">간편인증</button>
+      </div>
+      <div class="flex justify-center gap-4 mt-4 text-[12px] text-gray-500"><span>아이디 찾기</span><span>|</span><span>비밀번호 찾기</span><span>|</span><span>회원가입</span></div>
+    `})}
+    <div class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-md px-3 py-2 text-[12px] text-red-700">
+      <i data-lucide="alert-circle" class="w-[14px] h-[14px]"></i> 로그인 오류 5회 발생 시 별도 인증 절차가 필요합니다.
+    </div>
+  </div>
+  `);
+},
+
+"004": function(detailId){
+  if(detailId){
+    const n = NOTICES.find(x=>x.id===detailId) || NOTICES[0];
+    return shell("게시판", null, `
+    ${backBar("/004","공지사항")}
+    ${screenHeader("SFR-온기업-004","공지사항 상세","ONC-SCR-004-D")}
+    ${card({icon:"file-text", title:n.title, tag:`<span class="text-[11px] text-gray-400">조회 ${n.views}</span>`, content:`
+      <div class="flex gap-4 text-[11px] text-gray-400 mb-4 pb-3 border-b"><span>작성자: ${n.writer}</span><span>작성일: ${n.date}</span></div>
+      <p class="text-[13px] text-gray-700 leading-relaxed">${n.body}</p>
+      <div class="mt-4 flex items-center justify-between border rounded-lg p-3">
+        <div class="flex items-center gap-2 text-[12px]"><i data-lucide="paperclip" style="color:${NAVY}"></i>${n.file}</div>
+        ${btn("다운로드",{small:true,icon:"download"})}
+      </div>`})}
+    <div class="flex justify-between text-[12px] text-gray-500"><span>◀ 이전글</span><span>다음글 ▶</span></div>
+    `);
+  }
+  return shell("게시판", null, `
+  ${screenHeader("SFR-온기업-004","게시판 (공지/Q&A/자료실/보도자료/이용가이드/FAQ/기타)","ONC-SCR-004")}
+  ${tabs(["공지사항","Q&A","자료실","보도자료","이용가이드","FAQ","기타"],"공지사항")}
+  ${card({icon:"file-text", title:"공지사항 목록 (제목 클릭 시 상세 이동)", content:
+    table(["번호","제목","작성일","조회수"], NOTICES.map((n,i)=>[i===0?"공지":String(NOTICES.length-i), n.title, n.date, n.views]), NOTICES.map(n=>`/004/${n.id}`))
+  })}
+  ${card({icon:"message-square", title:"Q&A 등록 (제목/질문/알림·공개여부 체크)", content:`
+    ${field("제목",{required:true,content:inputEl('placeholder="문의 제목을 입력하세요"')})}
+    ${field("질문 내용",{required:true,content:textareaEl('rows="3"')})}
+    <div class="flex gap-4 text-[12px] text-gray-600 mb-3">
+      <label class="flex items-center gap-1.5"><input type="checkbox" /> 답변 알림 서비스</label>
+      <label class="flex items-center gap-1.5"><input type="checkbox" checked /> 공개 여부</label>
+    </div>
+    ${btn("등록",{primary:true,small:true})}
+  `})}
+  `);
+},
+
+"005": function(detailId){
+  if(detailId){
+    const p = PROGRAMS.find(x=>x.id===detailId) || PROGRAMS[0];
+    return shell("사업 안내", null, `
+    ${backBar("/005","사업 안내")}
+    ${screenHeader("SFR-온기업-005", p.name+" 상세안내","ONC-SCR-005-D", p.summary)}
+    ${card({icon:"layout-grid", title:"지원 개요", content: infoGrid([["지원유형",p.type],["지원한도",p.limit],["지원대상",p.target],["신청방법",p.method]])})}
+    ${card({icon:"clipboard-list", title:"필요 제출서류", content: checklist(p.docs)})}
+    <div class="grid grid-cols-2 gap-3">
+      ${btn("자가진단 먼저 하기",{onclick:"navigate('/010')"}).replace('class="','class="justify-center ')}
+      ${btn("사업 신청하기",{primary:true,onclick:"navigate('/011')"}).replace('class="','class="justify-center ')}
+    </div>
+    `);
+  }
+  return shell("사업 안내", null, `
+  ${screenHeader("SFR-온기업-005","사업 안내 (공사/유관기관 기업지원프로그램)","ONC-SCR-005")}
+  ${tabs(["공사 프로그램 한눈에 보기","공사 사업 상세안내","유관기관 프로그램"],"공사 프로그램 한눈에 보기")}
+  ${card({icon:"layout-grid", title:"지원유형별 프로그램 개요 (행 클릭 시 상세안내)", content:
+    table(["지원유형","지원 프로그램","지원내용","대상기업"], PROGRAMS.map(p=>[p.type,p.name,p.summary,p.target]), PROGRAMS.map(p=>`/005/${p.id}`))
+  })}
+  `);
+},
+
+"006": function(){
+  return shell("맞춤형 사업 추천", null, `
+  ${screenHeader("SFR-온기업-006","맞춤형 사업 추천","ONC-SCR-006","로직트리 기반 추천 · 결과 이력 관리")}
+  ${card({icon:"list-checks", title:"기업 상태 진단 (로직트리)", content:`
+    <div class="grid grid-cols-2 gap-4">
+      ${field("희망 지원유형",{required:true,content:selectEl(["자금조달","자산유동화","구조조정"])})}
+      ${field("기업 현재 상태",{required:true,content:selectEl(["정상 운영","일시적 유동성 위기","회생절차 진행중"])})}
+    </div>
+    ${btn("맞춤형 사업 추천 받기",{primary:true,icon:"search"})}
+  `})}
+  ${card({icon:"check-circle-2", title:"추천 결과 (상세안내로 이동)", content:`
+    <div class="space-y-2">
+      ${[["기업자산 유동화인수","p1"],["동산담보회수지원","p2"],["담보부사채 발행지원","p3"]].map(([r,pid])=>`
+      <div class="flex items-center justify-between border rounded-lg p-3">
+        <div><p class="text-[13px] font-medium">${r}</p><p class="text-[11px] text-gray-400">간략한 지원내용 소개 텍스트</p></div>
+        <div class="flex gap-2">${btn("상세보기",{small:true,onclick:`navigate('/005/${pid}')`})}${btn("신청하기",{small:true,primary:true,onclick:"navigate('/011')"})}</div>
+      </div>`).join("")}
+    </div>
+  `})}
+  `);
+},
+
+"007": function(){
+  return shell("챗봇", null, `
+  ${screenHeader("SFR-온기업-007","챗봇 서비스","ONC-SCR-007","시나리오 기반 응답 · 통합검색 연계 · 상담 신청 연결")}
+  <div class="max-w-sm ml-auto border border-gray-200 rounded-xl overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 text-white" style="background:${NAVY}"><i data-lucide="bot" class="w-[16px] h-[16px]"></i><span class="text-[13px] font-medium">온기업 상담봇</span></div>
+    <div class="p-4 space-y-3 bg-gray-50 h-64">
+      <div class="bg-white rounded-lg p-3 text-[12px] max-w-[85%]">안녕하세요! 무엇을 도와드릴까요?</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="text-[11px] border border-gray-300 rounded-full px-2.5 py-1 bg-white">신청절차 안내</span>
+        <span class="text-[11px] border border-gray-300 rounded-full px-2.5 py-1 bg-white">진행상태 확인</span>
+        <span class="text-[11px] border border-gray-300 rounded-full px-2.5 py-1 bg-white">상담 연결</span>
+      </div>
+      <div class="bg-blue-50 rounded-lg p-3 text-[12px] max-w-[85%] ml-auto text-right" style="color:#0C447C">진행상태 확인하고 싶어요</div>
+      <div class="bg-white rounded-lg p-3 text-[12px] max-w-[85%]">신청번호를 입력해주세요, 또는 상담원 연결을 원하시면 "상담신청"을 눌러주세요.</div>
+    </div>
+    <div class="flex gap-2 p-3 border-t border-gray-200">${inputEl('placeholder="메시지를 입력하세요"').replace('class="','class="flex-1 ')}${btn("전송",{primary:true,small:true,icon:"send"})}</div>
+  </div>
+  `);
+},
+
+"008": function(detailId){
+  if(detailId){
+    const inv = INVESTORS.find(x=>x.id===detailId) || INVESTORS[0];
+    return shell("투자자 매칭", null, `
+    ${backBar("/008","투자자 검색")}
+    ${screenHeader("SFR-온기업-008", inv.name+" 상세 프로필","ONC-SCR-008-D")}
+    ${card({icon:"building-2", title:"투자자 기본정보", content: infoGrid([["투자자 유형",inv.type],["설립연도",inv.est],["선호업종",inv.sector],["운용규모",inv.size]])})}
+    ${card({icon:"clipboard-list", title:"투자 성향 및 소개", content:`<p class="text-[13px] text-gray-700">${inv.detail}</p>`})}
+    <div class="flex gap-2 justify-end">${btn("IR자료 열람요청",{icon:"file-text"})}${btn("쪽지보내기",{primary:true,icon:"mail"})}</div>
+    `);
+  }
+  return shell("투자자 매칭", null, `
+  ${screenHeader("SFR-온기업-008","투자자 매칭 지원","ONC-SCR-008","투자자 검색(기업) / 투자희망기업 검색(투자자) / 투자자 라운지")}
+  ${tabs(["투자자 검색","투자희망기업 검색","투자자 라운지"],"투자자 검색")}
+  <div class="grid grid-cols-3 gap-4 mb-4">
+    ${card({icon:"filter", title:"검색 필터", content:`
+      ${field("투자자 유형",{content:selectEl(["전체","VC","PE"])})}
+      ${field("선호 투자규모",{content:selectEl(["10억 미만","10~50억"])})}
+      <button style="background:${NAVY}" class="w-full justify-center inline-flex items-center gap-1.5 rounded-md font-medium px-4 py-2 text-[13px] text-white">검색</button>
+    `})}
+    <div class="col-span-2 space-y-2">
+      ${INVESTORS.map(n=>`
+      <div onclick="navigate('/008/${n.id}')" class="border rounded-lg p-3 flex justify-between items-center cursor-pointer hover:border-[#005088]">
+        <div><p class="text-[13px] font-medium">${n.name}</p><p class="text-[11px] text-gray-400">설립일 ${n.est} · 선호업종 ${n.sector} · 운용규모 ${n.size}</p></div>
+        ${btn("쪽지보내기",{small:true,icon:"mail"})}
+      </div>`).join("")}
+    </div>
+  </div>
+  ${card({icon:"archive", title:"투자자 라운지 (투자매칭신청 / IR자료 열람요청 / 계약 등록)", content:
+    table(["구분","내용","상태"], [["신청현황","○○기업 투자매칭 신청",statusPill("검토중","amber")],["IR자료","기업IR자료 열람 요청",statusPill("승인완료","green")]])
+  })}
+  `);
+},
+
+"009": function(detailId){
+  if(detailId){
+    const c = CONSULT_HISTORY.find(x=>x.id===detailId) || CONSULT_HISTORY[0];
+    return shell("상담 신청", null, `
+    ${backBar("/009","상담 이력")}
+    ${screenHeader("SFR-온기업-009","상담 상세","ONC-SCR-009-D")}
+    ${card({icon:"calendar", title:"상담 정보", content: infoGrid([["상담일",c.date],["상담방식",c.mode],["관심업무",c.topic],["담당자",c.officer]])})}
+    ${card({icon:"clipboard-list", title:"상담 결과 요약", content:`<p class="text-[13px] text-gray-700">${c.note}</p>`})}
+    `);
+  }
+  return shell("상담 신청", null, `
+  ${screenHeader("SFR-온기업-009","상담 신청","ONC-SCR-009")}
+  ${card({icon:"calendar", title:"상담 신청(예약)", content:`
+    <div class="grid grid-cols-2 gap-4">
+      ${field("상담 방식",{required:true,content:`<div class="flex gap-3"><label class="flex items-center gap-1.5 text-[13px]"><input type="radio" name="mode" checked /> 영상상담(Zoom)</label><label class="flex items-center gap-1.5 text-[13px]"><input type="radio" name="mode" /> 방문상담</label></div>`})}
+      ${field("희망 일시",{required:true,content:inputEl('type="datetime-local"')})}
+      ${field("관심 업무",{required:true,content:selectEl(["기업자산 유동화인수","투자자 매칭"])})}
+      ${field("연락처",{required:true,content:inputEl('placeholder="010-0000-0000"')})}
+    </div>
+    ${btn("상담 신청",{primary:true,icon:"calendar"})}
+  `})}
+  ${card({icon:"clipboard-list", title:"상담 신청 이력 (클릭 시 상세)", content:
+    table(["신청일","방식","관심업무","상태"], CONSULT_HISTORY.map(c=>[c.date,c.mode,c.topic,statusPill(c.status,c.status==="완료"?"gray":"green")]), CONSULT_HISTORY.map(c=>`/009/${c.id}`))
+  })}
+  `);
+},
+
+"010": function(){
+  return shell("자가진단", null, `
+  ${screenHeader("SFR-온기업-010","자가진단","ONC-SCR-010","사업별 체크리스트 기반 신청자격 자동/자가 확인")}
+  ${card({icon:"list-checks", title:"자가진단 체크리스트 - 기업자산 유동화인수", content:`
+    ${checklist(["최근 3년 이상 사업영위 여부","회생절차 미개시 여부","동일 업종 유사사업 신청 이력 없음","재무제표 외부감사 대상 여부"])}
+    <div class="flex justify-end mt-4">${btn("진단 결과 확인",{primary:true,icon:"check-circle-2"})}</div>
+  `})}
+  ${card({icon:"check-circle-2", title:"진단 결과", tag: statusPill("신청 가능","green"), content:`
+    <p class="text-[13px] text-gray-600">모든 자격요건을 충족하여 사업 신청이 가능합니다.</p>
+    <div class="mt-3">${btn("사업 신청으로 이동",{primary:true,small:true,onclick:"navigate('/011')"})}</div>
+  `})}
+  `);
+},
+
+"011": function(){
+  return shell("사업 신청", null, `
+  ${screenHeader("SFR-온기업-011","사업 신청","ONC-SCR-011","회원정보 자동입력 · 필수서류 미제출시 진행불가 · 신청서 출력")}
+  ${timeline(["자가진단","신청정보 입력","서류 제출","완료"], 1)}
+  <div class="mb-4"></div>
+  ${card({icon:"building-2", title:"신청기업 정보", tag: badge("회원정보 자동연계","blue"), content:`
+    <div class="grid grid-cols-2 gap-4">
+      ${field("법인명",{required:true,content:inputEl('value="(주)캠코파트너스" readonly class="bg-gray-50"')})}
+      ${field("법인등록번호",{required:true,content:inputEl('value="110111-1234567" readonly class="bg-gray-50"')})}
+      ${field("담당자명",{required:true,content:inputEl('placeholder="홍길동"')})}
+      ${field("희망 지원금액",{hint:"단위: 백만원",content:inputEl('placeholder="0"')})}
+    </div>
+    ${field("지원 희망 사유 및 사업계획 개요",{required:true,content:textareaEl('rows="3"')})}
+  `})}
+  ${card({icon:"paperclip", title:"제출서류 첨부", content:`
+    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+      <i data-lucide="upload" style="color:${NAVY}" class="w-[24px] h-[24px] mx-auto mb-2"></i>
+      <p class="text-[13px] font-medium">파일을 끌어다 놓거나 클릭하여 업로드</p>
+      <p class="text-[11px] text-gray-400">PDF, HWP, XLS, ZIP · 파일당 20MB · 암호화 저장</p>
+    </div>
+  `})}
+  <div class="flex justify-between">${btn("이전")}<div class="flex gap-2">${btn("임시저장")}${btn("다음 단계",{primary:true})}</div></div>
+  `);
+},
+
+"012": function(detailId){
+  if(detailId && detailId.indexOf("a")===0){
+    const a = MY_APPLICATIONS.find(x=>x.id===detailId) || MY_APPLICATIONS[0];
+    return shell("My Page", null, `
+    ${backBar("/012","My Page")}
+    ${screenHeader("SFR-온기업-012", a.name+" 평가 진행상황","ONC-SCR-012-D")}
+    ${card({icon:"list-checks", title:"심사/평가 진행 단계", content: timeline(["접수","사전검토","외부평가","심의","계약체결"], a.stage-1)})}
+    ${card({icon:"user", title:"담당자 정보", content: infoGrid([["담당자",a.officer],["접수일",a.date],["현재 단계",a.stageLabel]])})}
+    `);
+  }
+  if(detailId && detailId.indexOf("k")===0){
+    const k = MY_CONTRACTS.find(x=>x.id===detailId) || MY_CONTRACTS[0];
+    return shell("My Page", null, `
+    ${backBar("/012","My Page")}
+    ${screenHeader("SFR-온기업-012","계약 납부 상세","ONC-SCR-012-D")}
+    ${card({icon:"file-signature", title:"납부 정보", content: infoGrid([["사업명",k.program],["납부회차",k.round],["납부대상금액",k.amount],["납부일",k.date]]) + `<div class="mt-3">${statusPill(k.status,k.tone)}</div>`})}
+    <div class="flex gap-2 justify-end">${btn("계약서 조회",{icon:"file-text"})}${btn("증명서 발급요청",{primary:true,icon:"file-check-2"})}</div>
+    `);
+  }
+  return shell("My Page", null, `
+  ${screenHeader("SFR-온기업-012","My Page","ONC-SCR-012")}
+  ${tabs(["나의 정보","신청사업 평가 진행상황","요청사항 관리","계약 관리"],"신청사업 평가 진행상황")}
+  ${card({icon:"list-checks", title:"신청사업 평가 진행상황 (클릭 시 상세)", content:
+    table(["사업명","접수일","현재단계","담당자"], MY_APPLICATIONS.map(a=>[a.name,a.date,statusPill(a.stageLabel,"blue"),a.officer]), MY_APPLICATIONS.map(a=>`/012/${a.id}`))
+  })}
+  ${card({icon:"file-signature", title:"계약 관리 - 납부 현황 (클릭 시 상세)", content:
+    table(["사업명","납부회차","납부대상금액","납부일","납부상태"], MY_CONTRACTS.map(k=>[k.program,k.round,k.amount,k.date,statusPill(k.status,k.tone)]), MY_CONTRACTS.map(k=>`/012/${k.id}`))
+  })}
+  ${card({icon:"message-square", title:"요청사항 관리 (공사 담당자 소통)", content:`
+    <div class="flex items-center justify-between border rounded-lg p-3">
+      <div><p class="text-[13px] font-medium">추가자료 요청 - 재무제표 최신본</p><p class="text-[11px] text-gray-400">담당자: 김담당 · 요구일 2026-06-15</p></div>
+      ${statusPill("대기","amber")}
+    </div>
+  `})}
+  `);
+},
+
+"013": function(detailId){
+  if(detailId){
+    const q = QA_ADMIN.find(x=>x.id===detailId) || QA_ADMIN[0];
+    return shell("관리자 · 게시판 관리", null, `
+    ${backBar("/013","Q&A 목록")}
+    ${screenHeader("SFR-온기업-013","Q&A 답변 등록","ONC-SCR-013-D")}
+    ${card({icon:"message-square", title:q.title, content:`
+      <p class="text-[11px] text-gray-400 mb-2">질문자: ${q.writer}</p>
+      <p class="text-[13px] text-gray-700 mb-4 pb-3 border-b">${q.question}</p>
+      ${field("답변 내용",{required:true,content:textareaEl('rows="4"', q.answer||"")})}
+      ${btn("답변 등록",{primary:true,icon:"send"})}
+    `})}
+    `);
+  }
+  return shell("관리자 · 게시판 관리", null, `
+  ${screenHeader("SFR-온기업-013","[온기업-관리자] 게시판 관리","ONC-SCR-013")}
+  ${tabs(["공지사항","Q&A","자료실","보도자료","투자자라운지"],"Q&A")}
+  ${card({icon:"settings", title:"게시판 설정", content:`
+    <div class="grid grid-cols-2 gap-4">
+      ${field("게시판명",{content:inputEl('value="묻고답하기(Q&A)"')})}
+      ${field("접근 및 작성 권한",{content:selectEl(["전체 회원","기업회원만"])})}
+    </div>
+  `})}
+  ${card({icon:"message-square", title:"Q&A 답변 관리 (클릭 시 답변 등록/조회)", content:
+    table(["제목","질문자","답변상태","답변자"], QA_ADMIN.map(q=>[q.title,q.writer,statusPill(q.status,q.status==="완료"?"green":"amber"),q.officer]), QA_ADMIN.map(q=>`/013/${q.id}`))
+  })}
+  `);
+},
+
+"014": function(detailId){
+  if(detailId){
+    const l = SYS_LOGS.find(x=>x.id===detailId) || SYS_LOGS[0];
+    return shell("관리자 · 시스템 관리", null, `
+    ${backBar("/014","시스템 로그")}
+    ${screenHeader("SFR-온기업-014","시스템 로그 상세","ONC-SCR-014-D")}
+    ${card({icon:"alert-circle", title:"로그 정보", content: infoGrid([["발생시각",l.time],["구분",l.type],["상태",l.status]])})}
+    ${card({icon:"clipboard-list", title:"상세 내용", content:`<p class="text-[13px] text-gray-700">${l.detail}</p>`})}
+    `);
+  }
+  return shell("관리자 · 시스템 관리", null, `
+  ${screenHeader("SFR-온기업-014","[온기업-관리자] 시스템 관리","ONC-SCR-014")}
+  <div class="grid grid-cols-2 gap-4">
+    ${card({icon:"database", title:"코드 / 메뉴 관리", content: table(["코드","코드명","관리"], [["CD001","지원유형 코드",btn("수정",{small:true})],["CD002","회원구분 코드",btn("수정",{small:true})]])})}
+    ${card({icon:"shield-check", title:"권한 관리", content: table(["역할","권한범위"], [["시스템 관리자","전체"],["S&LB 업무담당","S&LB 메뉴"],["DIP 금융담당","DIP 메뉴"]])})}
+  </div>
+  ${card({icon:"alert-circle", title:"에러 / 시스템 로그 관리 (클릭 시 상세)", content:
+    table(["발생시각","구분","내용","상태"], SYS_LOGS.map(l=>[l.time,l.type,l.content,statusPill(l.status,l.tone)]), SYS_LOGS.map(l=>`/014/${l.id}`))
+  })}
+  `);
+},
+
+"015": function(detailId){
+  if(detailId){
+    const r = RESERVATIONS.find(x=>x.id===detailId) || RESERVATIONS[0];
+    return shell("관리자 · 상담예약 관리", null, `
+    ${backBar("/015","상담예약 목록")}
+    ${screenHeader("SFR-온기업-015","상담예약 상세","ONC-SCR-015-D")}
+    ${card({icon:"calendar", title:"예약 정보", content: infoGrid([["기업명",r.company],["방식",r.mode],["희망일시",r.date],["관심업무",r.topic]])})}
+    ${card({icon:"clipboard-list", title:"신청 메모", content:`<p class="text-[13px] text-gray-700">${r.memo}</p>`})}
+    ${card({icon:"user", title:"담당자 배정 및 처리", content:`
+      <div class="grid grid-cols-2 gap-4 mb-3">
+        ${field("담당자 배정",{content:selectEl(["미배정","박담당","이담당"])})}
+        ${field("일정 변경",{content:inputEl('type="datetime-local"')})}
+      </div>
+      <div class="flex gap-2">${btn("승인",{primary:true,icon:"check-circle-2"})}${btn("거절",{icon:"x"})}</div>
+    `})}
+    `);
+  }
+  return shell("관리자 · 상담예약 관리", null, `
+  ${screenHeader("SFR-온기업-015","[온기업-관리자] 상담예약 관리","ONC-SCR-015","온라인/오프라인 신청 통합 · 승인/거절/일정변경")}
+  ${card({icon:"calendar", title:"상담예약 현황 (클릭 시 상세 · 필터: 기업명/관심업무)", content:`
+    <div class="flex gap-2 mb-3">${inputEl('placeholder="기업명 검색"').replace('class="','class="w-48 ')}${selectEl(["전체 업무","S&LB"]).replace('class="','class="w-40 ')}${btn("조회",{small:true,icon:"search"})}</div>
+    ${table(["기업명","방식","일정","관심업무","상태"], RESERVATIONS.map(r=>[r.company,r.mode,r.date,r.topic,statusPill(r.status,"amber")]), RESERVATIONS.map(r=>`/015/${r.id}`))}
+  `})}
+  `);
+},
+
+"016": function(detailId){
+  if(detailId){
+    const m = MEMBERS.find(x=>x.id===detailId) || MEMBERS[0];
+    return shell("관리자 · 회원 관리", null, `
+    ${backBar("/016","특수고객 목록")}
+    ${screenHeader("SFR-온기업-016", m.name+" 상세","ONC-SCR-016-D","통합고객관리 연동")}
+    ${card({icon:"building-2", title:"기본정보", content: infoGrid([["유형",m.type],["법인등록번호",m.regno],["대표자",m.ceo],["연락처",m.contact],["업무기간",m.period],["상태",statusPill(m.status,m.tone)]])})}
+    <div class="flex gap-2 justify-end">${btn("비밀번호초기화",{small:true,icon:"refresh-cw"})}${btn("권한변경",{small:true,icon:"shield-check"})}${btn("승인처리",{primary:true,small:true,icon:"check-circle-2"})}</div>
+    `);
+  }
+  return shell("관리자 · 회원 관리", null, `
+  ${screenHeader("SFR-온기업-016","[온기업-관리자] 회원 관리","ONC-SCR-016","통합고객관리 기능 연동")}
+  ${tabs(["가입기업 관리","가입 투자자 관리","특수고객 관리"],"특수고객 관리")}
+  ${card({icon:"users", title:"특수고객 현황 (클릭 시 상세)", tag: badge("통합고객관리 연동","blue"), content:
+    table(["유형","기업명","법인번호","업무기간","상태"], MEMBERS.map(m=>[m.type,m.name,m.regno,m.period,statusPill(m.status,m.tone)]), MEMBERS.map(m=>`/016/${m.id}`))
+  })}
+  `);
+},
+
+"017": function(detailId){
+  if(detailId){
+    const c = CORP_CUSTOMERS.find(x=>x.id===detailId) || CORP_CUSTOMERS[0];
+    return shell("관리자 · 기업상담 관리", null, `
+    ${backBar("/017","기업고객통합정보")}
+    ${screenHeader("SFR-온기업-017", c.name+" 통합정보 상세","ONC-SCR-017-D")}
+    ${card({icon:"building-2", title:"요약 정보", content: infoGrid([["상담이력수",c.consults],["신청사업수",c.applications],["최근 접촉일",c.lastContact]])})}
+    ${card({icon:"clock", title:"상담 이력", content: c.history.map(h=>`<p class="text-[13px] text-gray-700 py-1.5 border-b last:border-0">${h}</p>`).join("")})}
+    `);
+  }
+  return shell("관리자 · 기업상담 관리", null, `
+  ${screenHeader("SFR-온기업-017","[온기업-관리자] 기업상담 관리","ONC-SCR-017","[SFR-일반-005] 기업고객통합정보 현황 조회 참고")}
+  ${card({icon:"building-2", title:"기업고객통합정보 현황 (클릭 시 상세)", content:
+    table(["법인명","상담이력수","신청사업수","최근 접촉일"], CORP_CUSTOMERS.map(c=>[c.name,c.consults,c.applications,c.lastContact]), CORP_CUSTOMERS.map(c=>`/017/${c.id}`))
+  })}
+  ${card({icon:"clipboard-list", title:"상담 정보 등록 (대상기업/상담자/일자/형태/관심사업)", content:`
+    <div class="grid grid-cols-2 gap-4">${field("대상기업",{content:inputEl('placeholder="법인명 검색"')})}${field("상담 형태",{content:selectEl(["유선","방문"])})}</div>
+    ${field("상담 내용",{content:textareaEl('rows="2"')})}
+    ${btn("담당자 배정 및 등록",{primary:true,small:true})}
+  `})}
+  `);
+},
+
+"018": function(detailId){
+  if(detailId){
+    const a = ADMIN_APPLICATIONS.find(x=>x.id===detailId) || ADMIN_APPLICATIONS[0];
+    return shell("관리자 · 기업신청 관리", null, `
+    ${backBar("/018","신청 현황")}
+    ${screenHeader("SFR-온기업-018", a.company+" 신청 상세","ONC-SCR-018-D","ex. [SFR-금융지원-004] 신청-접수 관리 연동")}
+    ${card({icon:"file-check-2", title:"심사 진행 단계", content: timeline(["접수","사전검토","외부평가","심의","계약"], a.stage)})}
+    ${card({icon:"building-2", title:"신청 정보", content: infoGrid([["프로그램",a.program],["접수일",a.date],["담당자",a.officer],["현재상태",statusPill(a.status,a.tone)]])})}
+    ${card({icon:"paperclip", title:"제출서류", content: a.docs.map(d=>`
+      <div class="flex items-center justify-between border rounded-lg p-2.5 mb-2 last:mb-0 text-[12px]">
+        <div class="flex items-center gap-2"><i data-lucide="file-text" style="color:${NAVY}"></i>${d}</div>${btn("다운로드",{small:true,icon:"download"})}
+      </div>`).join("")})}
+    <div class="flex justify-end gap-2">${btn("반려",{icon:"x"})}${btn("다음 단계 승인",{primary:true,icon:"check-circle-2"})}</div>
+    `);
+  }
+  return shell("관리자 · 기업신청 관리", null, `
+  ${screenHeader("SFR-온기업-018","[온기업-관리자] 기업신청 관리","ONC-SCR-018","ex. [SFR-금융지원-004] 신청-접수 관리 연동")}
+  ${card({icon:"clipboard-list", title:"기업지원프로그램 신청 현황 (클릭 시 상세)", content:
+    table(["신청기업","프로그램","접수일","진행상태","담당자"], ADMIN_APPLICATIONS.map(a=>[a.company,a.program,a.date,statusPill(a.status,a.tone),a.officer]), ADMIN_APPLICATIONS.map(a=>`/018/${a.id}`))
+  })}
+  ${card({icon:"wallet", title:"투자자매칭 신청 관리", content: table(["기업명","업무진행상태","IR 진행"], [["(주)ABC",statusPill("정보공개","blue"),"2026-06-25 예정"]])})}
+  `);
+},
+
+"019": function(){
+  return shell("관리자 · 보고서 관리", null, `
+  ${screenHeader("SFR-온기업-019","[온기업-관리자] 보고서 관리","ONC-SCR-019")}
+  <div class="grid grid-cols-3 gap-3 mb-4">
+    <div class="bg-white border rounded-xl p-4"><p class="text-[12px] text-gray-500">누적 기업회원</p><p class="text-[22px] font-medium mt-1">1,204</p></div>
+    <div class="bg-white border rounded-xl p-4"><p class="text-[12px] text-gray-500">신규 상담(월)</p><p class="text-[22px] font-medium mt-1">86</p></div>
+    <div class="bg-white border rounded-xl p-4"><p class="text-[12px] text-gray-500">사업 신청건</p><p class="text-[22px] font-medium mt-1">312</p></div>
+  </div>
+  ${card({icon:"bar-chart-3", title:"기업회원 명세/통계 (연도별·지역별·상태별)", content:`
+    <div class="h-40 bg-gray-50 rounded-lg flex items-end gap-3 p-4">
+      ${[40,65,50,80,55,70].map(h=>`<div class="flex-1 rounded-t" style="height:${h}%;background:${NAVY}"></div>`).join("")}
+    </div>
+  `})}
+  <div class="flex justify-end">${btn("통계 출력",{icon:"file-text"})}</div>
+  `);
+},
+
+"020": function(detailId){
+  const kd = KODATA_LIST.find(x=>x.id===detailId);
+  const ds = DISTRESS_LIST.find(x=>x.id===detailId);
+  if(kd){
+    return shell("관리자 · 기타 관리", null, `
+    ${backBar("/020","KODATA 회생기업")}
+    ${screenHeader("SFR-온기업-020", kd.name+" 회생기업 상세","ONC-SCR-020-D")}
+    ${card({icon:"landmark", title:"정보", content: infoGrid([["법원",kd.court],["단계",kd.stage],["K-Score",statusPill(kd.score,kd.tone)]])})}
+    ${card({icon:"clipboard-list", title:"상세 내용", content:`<p class="text-[13px] text-gray-700">${kd.detail}</p>`})}
+    `);
+  }
+  if(ds){
+    return shell("관리자 · 기타 관리", null, `
+    ${backBar("/020","부실징후기업 모니터링")}
+    ${screenHeader("SFR-온기업-020", ds.name+" 부실징후 판정 상세","ONC-SCR-020-D")}
+    ${card({icon:"gavel", title:"정보", content: infoGrid([["조회연도",ds.year],["판정",statusPill(ds.verdict,ds.tone)]])})}
+    ${card({icon:"clipboard-list", title:"상세 내용", content:`<p class="text-[13px] text-gray-700">${ds.detail}</p>`})}
+    `);
+  }
+  return shell("관리자 · 기타 관리", null, `
+  ${screenHeader("SFR-온기업-020","[온기업-관리자] 기타 관리","ONC-SCR-020","동산금융 · KODATA 회생기업 · 부실징후(K-Score) · 국유증권")}
+  <div class="grid grid-cols-2 gap-4">
+    ${card({icon:"landmark", title:"한국평가데이터(KODATA) 회생기업 자료 (클릭 시 상세)", content:
+      table(["기업명","법원","단계","K-Score"], KODATA_LIST.map(k=>[k.name,k.court,k.stage,statusPill(k.score,k.tone)]), KODATA_LIST.map(k=>`/020/${k.id}`))
+    })}
+    ${card({icon:"gavel", title:"부실징후기업 모니터링 (클릭 시 상세)", content:
+      table(["기업명","조회연도","판정"], DISTRESS_LIST.map(d=>[d.name,d.year,statusPill(d.verdict,d.tone)]), DISTRESS_LIST.map(d=>`/020/${d.id}`))
+    })}
+  </div>
+  ${card({icon:"upload", title:"동산매각정보 업로드 (엑셀 기반)", content:`<div class="border-2 border-dashed rounded-lg p-4 text-center text-[12px] text-gray-500">입찰/낙찰/평가 구분 엑셀 파일 업로드</div>`})}
+  `);
+},
+
+"021": function(detailId){
+  if(detailId){
+    const r = REQUESTS.find(x=>x.id===detailId) || REQUESTS[0];
+    return shell("자문기관 · 의뢰관리", "특수창구", `
+    ${backBar("/021","의뢰 목록")}
+    ${screenHeader("SFR-온기업-021", r.title,"ONC-SCR-021-D")}
+    ${card({icon:"clipboard-list", title:"의뢰 정보", content: infoGrid([["대상사업",r.program],["의뢰일",r.date],["담당자",r.officer],["의뢰유형",r.reqtype]])})}
+    ${card({icon:"file-text", title:"의뢰 내용", content:`<p class="text-[13px] text-gray-700">${r.content}</p>`})}
+    ${card({icon:"send", title:"결과 보고 등록", content:`
+      <div class="border-2 border-dashed rounded-lg p-5 text-center bg-gray-50 mb-3"><i data-lucide="upload" style="color:${NAVY}" class="w-[20px] h-[20px] mx-auto mb-2"></i><p class="text-[13px]">결과보고서 파일 등록</p></div>
+      ${field("비용 청구 금액",{content:inputEl('placeholder="0"')})}
+      ${btn("결과 전송",{primary:true,icon:"send"})}
+    `})}
+    `);
+  }
+  return shell("자문기관 · 의뢰관리", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-021","[특수] 자문기관 - 의뢰관리","ONC-SCR-021","회계법인/감정평가법인/법무법인/S&LB/DIP 등 대상")}
+  ${card({icon:"clipboard-list", title:"의뢰 조회 (클릭 시 상세)", content:
+    table(["대상사업","일자","담당자","의뢰유형","의뢰제목","상태"], REQUESTS.map(r=>[r.program,r.date,r.officer,r.reqtype,r.title,statusPill(r.status,r.tone)]), REQUESTS.map(r=>`/021/${r.id}`))
+  })}
+  `);
+},
+
+"022": function(detailId){
+  if(detailId){
+    const f = FUND_ITEMS.find(x=>x.id===detailId) || FUND_ITEMS[0];
+    return shell("펀드 운용사 일반", "특수창구", `
+    ${backBar("/022","진행상태")}
+    ${screenHeader("SFR-온기업-022", f.name+" 상세","ONC-SCR-022-D")}
+    ${card({icon:"refresh-cw", title:"진행상태", content: infoGrid([["입력일",f.date],["전송상태",statusPill(f.sent,f.tone1)],["공사확인",statusPill(f.confirmed,f.tone2)]])})}
+    ${card({icon:"clipboard-list", title:"처리 이력", content:`<p class="text-[13px] text-gray-700">${f.detail}</p>`})}
+    `);
+  }
+  return shell("펀드 운용사 일반", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-022","[특수] 펀드 운용사 일반 (명세 관리)","ONC-SCR-022","운용사 작성 → 전송 → 공사확인 → 승인 절차")}
+  <div class="grid grid-cols-3 gap-4 mb-4">
+    ${card({icon:"landmark", title:"운용사 관리", content:`<p class="text-[12px] text-gray-500">기본정보 · 인력현황 조회/등록</p>`})}
+    ${card({icon:"wallet", title:"펀드 관리", content:`<p class="text-[12px] text-gray-500">출자자현황 · 재무제표 조회/등록</p>`})}
+    ${card({icon:"ship", title:"투자포트폴리오 관리", content:`<p class="text-[12px] text-gray-500">선박펀드: 선박정보·환경규제 포함</p>`})}
+  </div>
+  ${card({icon:"refresh-cw", title:"진행상태 확인 (클릭 시 상세)", content:
+    table(["항목","입력일","전송상태","공사 확인"], FUND_ITEMS.map(f=>[f.name,f.date,statusPill(f.sent,f.tone1),statusPill(f.confirmed,f.tone2)]), FUND_ITEMS.map(f=>`/022/${f.id}`))
+  })}
+  `);
+},
+
+"023": function(detailId){
+  if(detailId){
+    const item = R023.find(x=>x.id===detailId) || R023[0];
+    return shell("투자심사 보고", "특수창구", reportDetail(item,"023","SFR-온기업-023","투자심사 보고","투자심사 이력"));
+  }
+  return shell("투자심사 보고", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-023","[특수] 펀드 운용사 - 투자심사 보고","ONC-SCR-023","[SFR-펀드관리-017] 연계")}
+  ${reportHistory(R023,"023",["투자심사일","투자유형","투자금액"])}
+  ${card({icon:"file-check-2", title:"투자심사 신규 등록", content:`
+    <div class="grid grid-cols-2 gap-4">
+      ${field("펀드구분",{content:selectEl(["기업지원펀드"])})}${field("투자심사일",{content:inputEl('type="date"')})}
+      ${field("투자유형",{content:selectEl(["신주","구주"])})}${field("투자금액",{content:inputEl('placeholder="0"')})}
+    </div>
+    ${field("특이사항",{content:textareaEl('rows="2"')})}
+    ${btn("투자계약서 등록 및 전송",{primary:true,icon:"send"})}
+  `})}
+  `);
+},
+
+"024": function(detailId){
+  if(detailId){
+    const item = R024.find(x=>x.id===detailId) || R024[0];
+    return shell("총회/이사회 보고", "특수창구", reportDetail(item,"024","SFR-온기업-024","총회/이사회 보고","총회/이사회 이력"));
+  }
+  return shell("총회/이사회 보고", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-024","[특수] 펀드 운용사 - 총회/이사회 보고","ONC-SCR-024","정관 총회 항목 체크리스트 관리")}
+  ${reportHistory(R024,"024",["총회종류","결의방법","총회일"])}
+  ${card({icon:"users", title:"총회/이사회 신규 등록", content:`
+    <div class="grid grid-cols-2 gap-4">${field("총회종류",{content:selectEl(["정기총회","임시총회"])})}${field("결의방법",{content:selectEl(["서면결의","출석결의"])})}</div>
+    ${field("총회 내용",{content:textareaEl('rows="2"')})}
+    <p class="text-[12px] font-medium mb-2">정관 총회 체크리스트</p>
+    ${checklist(["예산안 승인 여부","결산 보고 여부","임원 선임 안건 여부"])}
+  `})}
+  `);
+},
+
+"025": function(detailId){
+  if(detailId){
+    const item = R025.find(x=>x.id===detailId) || R025[0];
+    return shell("보고사항 보고", "특수창구", reportDetail(item,"025","SFR-온기업-025","보고사항 보고","보고사항 이력"));
+  }
+  return shell("보고사항 보고", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-025","[특수] 펀드 운용사 - 보고사항 보고","ONC-SCR-025","선박펀드: 용선사 재무현황·질권·담보비율 등 모니터링 포함")}
+  ${reportHistory(R025,"025",["보고구분","기준분기","제출일"])}
+  ${card({icon:"file-text", title:"정기/수시/기타 보고 신규 등록", content:`
+    <div class="grid grid-cols-2 gap-4">${field("보고구분",{content:selectEl(["정기","수시","기타"])})}${field("기준분기",{content:selectEl(["2026 Q2"])})}</div>
+    ${field("보고제목",{required:true,content:inputEl('placeholder="2026년 2분기 정기보고"')})}
+    <p class="text-[12px] font-medium mb-2">선박펀드 모니터링 항목</p>
+    ${checklist(["용선사 재무현황","질권/후순위 저당권","담보비율","선박보험"])}
+  `})}
+  `);
+},
+
+"026": function(detailId){
+  if(detailId){
+    const item = R026.find(x=>x.id===detailId) || R026[0];
+    return shell("공문 보고", "특수창구", reportDetail(item,"026","SFR-온기업-026","공문 보고","공문 이력"));
+  }
+  return shell("공문 보고", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-026","[특수] 펀드 운용사 - 공문 보고","ONC-SCR-026")}
+  ${reportHistory(R026,"026",["공문종류","공문유형","공문일자","처리현황"])}
+  ${card({icon:"mail", title:"공문 신규 등록 및 전송", content:`
+    <div class="grid grid-cols-2 gap-4">
+      ${field("공문종류",{content:selectEl(["수신","발신"])})}${field("공문유형",{content:selectEl(["보고","총회","기타"])})}
+      ${field("공문일자",{content:inputEl('type="date"')})}${field("처리현황",{content:statusPill("접수","gray")})}
+    </div>
+    ${field("공문제목",{required:true,content:inputEl()})}
+    <div class="border-2 border-dashed rounded-lg p-4 text-center text-[12px] text-gray-500">첨부파일 업로드</div>
+  `})}
+  `);
+},
+
+"027": function(detailId){
+  if(detailId==="cap1"){
+    return shell("출자금 납입요청", "특수창구", `
+    ${backBar("/027","납입요청 목록")}
+    ${screenHeader("SFR-온기업-027","1차 출자금 납입요청 상세","ONC-SCR-027-D")}
+    ${card({icon:"wallet", title:"납입 정보", content: infoGrid([["지정납입일","2026-07-01"],["총 금액","10,000,000,000원"],["납입계좌","국민은행 123-456-789012"]])})}
+    ${card({icon:"list-checks", title:"출자자별 납입 내역", content: table(["출자자","출자비율","납입요청금액"], [["공사","60%","6,000,000,000원"],["민간출자자","40%","4,000,000,000원"]])})}
+    `);
+  }
+  return shell("출자금 납입요청", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-027","[특수] 펀드 운용사 - 출자금 납입요청 등","ONC-SCR-027","출자자별 금액 1차 자동계산(비율기반)")}
+  ${card({icon:"wallet", title:"출자금 납입요청 정보 입력", content:`
+    <div class="grid grid-cols-2 gap-4">
+      ${field("차수",{content:inputEl('placeholder="1차"')})}${field("지정납입일",{content:inputEl('type="date"')})}
+      ${field("총 금액",{content:inputEl('placeholder="0"')})}${field("납입계좌",{content:inputEl('placeholder="계좌번호"')})}
+    </div>
+    ${table(["출자자","출자비율","납입요청금액(자동계산)"], [["공사","60%","6,000,000,000원"],["민간출자자","40%","4,000,000,000원"]], ["/027/cap1","/027/cap1"])}
+  `})}
+  ${card({icon:"bell", title:"분배금 지급통보 (분배일 사전 알람)", content:`
+    <div class="flex items-center gap-2 bg-blue-50 rounded-md px-3 py-2 text-[12px]" style="color:#0C447C"><i data-lucide="bell" class="w-[14px] h-[14px]"></i> 분배일 당일 해당 선박펀드에 사전 알람 팝업이 표시됩니다.</div>
+  `})}
+  `);
+},
+
+"028": function(detailId){
+  if(detailId){
+    const item = R028.find(x=>x.id===detailId) || R028[0];
+    return shell("투자실적 검증보고", "특수창구", reportDetail(item,"028","SFR-온기업-028","투자실적 검증","실물검증 이력"));
+  }
+  return shell("투자실적 검증보고", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-028","[특수] 펀드 운용사 - 투자실적 검증 등 보고","ONC-SCR-028","[SFR-펀드관리-022] 연계 · 공사-운용사-수탁기관 정보대사")}
+  ${reportHistory(R028,"028",["검증일","검증주기","일치여부","기타의견"])}
+  ${card({icon:"bar-chart-3", title:"펀드 평가 (Valuation) 결과 보고", content:`
+    ${field("평가 정보 입력",{content:textareaEl('rows="2"')})}
+    ${btn("평가결과 보고 및 전송",{primary:true,icon:"send"})}
+  `})}
+  `);
+},
+
+"029": function(detailId){
+  if(detailId){
+    const item = R029.find(x=>x.id===detailId) || R029[0];
+    return shell("선박펀드 기타보고", "특수창구", reportDetail(item,"029","SFR-온기업-029","만기/조기상환","만기/조기상환 목록"));
+  }
+  return shell("선박펀드 기타보고", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-029","[특수] 펀드 운용사 - 선박펀드 운용사 기타 보고","ONC-SCR-029","해운사 상담 / 선박투자회사 설립 / 정기수리검사 / 만기·조기상환 / 채무불이행")}
+  <div class="grid grid-cols-2 gap-4">
+    ${card({icon:"ship", title:"해운사 상담 관리", content:`<p class="text-[12px] text-gray-500">공사·해운사 상담 이력 공동 조회/관리</p>`})}
+    ${card({icon:"landmark", title:"선박투자회사 등 설립 보고", content:`<p class="text-[12px] text-gray-500">해외 SPC 설립·청산 이력 관리</p>`})}
+    ${card({icon:"calendar", title:"정기수리검사 일정 관리", content:`<p class="text-[12px] text-gray-500">일정 등록 및 전송 진행상태 확인</p>`})}
+    ${card({icon:"gavel", title:"채무불이행 관리", content:`<p class="text-[12px] text-gray-500">위반사유 접수·점검 등록</p>`})}
+  </div>
+  ${reportHistory(R029,"029",["펀드명","만기일","상환유형","상태"])}
+  `);
+},
+
+"030": function(detailId){
+  if(detailId){
+    const a = ANNOUNCEMENTS.find(x=>x.id===detailId) || ANNOUNCEMENTS[0];
+    return shell("온라인 출자사업 신청", "특수창구", `
+    ${backBar("/030","공고 목록")}
+    ${screenHeader("SFR-온기업-030", a.name+" 상세","ONC-SCR-030-D")}
+    ${card({icon:"calendar", title:"공고 개요", content: infoGrid([["접수일",a.open],["마감일",a.close],["심사일",a.review]])})}
+    ${card({icon:"list-checks", title:"신청자격", content:`<p class="text-[13px] text-gray-700">${a.qualify}</p>`})}
+    ${card({icon:"paperclip", title:"제출서류", content: checklist(a.docs)})}
+    <div class="flex justify-end">${btn("신청서 접수 및 출력",{primary:true,icon:"send"})}</div>
+    `);
+  }
+  return shell("온라인 출자사업 신청", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-030","[특수] 펀드 운용사 - 온라인 출자사업 신청","ONC-SCR-030","온기업 가입 투자자 회원도 이용 가능 (권한 설정)")}
+  ${card({icon:"calendar", title:"출자사업 공고 조회 (클릭 시 상세)", content:
+    table(["공고명","접수일","마감일","심사일"], ANNOUNCEMENTS.map(a=>[a.name,a.open,a.close,a.review]), ANNOUNCEMENTS.map(a=>`/030/${a.id}`))
+  })}
+  `);
+},
+
+"031": function(detailId){
+  if(detailId){
+    const item = R031.find(x=>x.id===detailId) || R031[0];
+    return shell("운용지시서 관리", "특수창구", reportDetail(item,"031","SFR-온기업-031","운용지시서","운용지시서 목록"));
+  }
+  return shell("운용지시서 관리", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-031","[특수] 수탁기관 - 운용지시서 관리","ONC-SCR-031","[SFR-펀드관리-010] 연계")}
+  ${reportHistory(R031,"031",["펀드구분","운용지시종류","운용지시일","제목","진행현황"])}
+  ${card({icon:"send", title:"운용지시 결과 보고 및 전송", content:`
+    ${field("처리현황 등록",{content:textareaEl('rows="2"')})}
+    ${btn("전송 (진행상태: 전송/접수/확정)",{primary:true,icon:"send"})}
+  `})}
+  `);
+},
+
+"032": function(detailId){
+  if(detailId){
+    const r = RECON_ITEMS.find(x=>x.id===detailId) || RECON_ITEMS[0];
+    let memoBlock = "";
+    if(r.memo){
+      memoBlock = card({icon:"message-square", title:"소통 이력", content:`
+        <p class="text-[13px] text-gray-700">${r.memo}</p>
+        <div class="mt-3">${field("소명 답변 등록",{content:textareaEl('rows="2"')})}</div>
+        ${btn("답변 등록",{primary:true,icon:"send"})}
+      `});
+    }
+    return shell("정보대사 관리", "특수창구", `
+    ${backBar("/032","정보대사 목록")}
+    ${screenHeader("SFR-온기업-032", r.label+" 대사 상세","ONC-SCR-032-D")}
+    ${card({icon:"database", title:"대사 결과", content: infoGrid([["공사 시스템 값",r.sysval],["수탁기관 값",r.trustval],["일치여부",statusPill(r.match,r.tone)]])})}
+    ${memoBlock}
+    `);
+  }
+  return shell("정보대사 관리", "특수창구", `
+  ${ipNotice()}
+  ${screenHeader("SFR-온기업-032","[특수] 수탁기관 - 정보대사 관리 등","ONC-SCR-032","[SFR-펀드관리-010] 연계 · 계좌/보유자산/입출금/잔고 정보대사")}
+  ${card({icon:"database", title:"수탁기관 정보대사 (클릭 시 상세)", content:
+    table(["항목","공사 시스템 값","수탁기관 값","일치여부"], RECON_ITEMS.map(r=>[r.label,r.sysval,r.trustval,statusPill(r.match,r.tone)]), RECON_ITEMS.map(r=>`/032/${r.id}`))
+  })}
+  `);
+},
+
+};
+
+/* ---------- 해시 라우터 + 메인 렌더 ---------- */
+function navigate(path){ window.location.hash = path; }
+window.navigate = navigate;
+
+function getPath(){
+  return window.location.hash.replace(/^#/, "") || "/011";
+}
+
+function render(){
+  const path = getPath();
+  const segments = path.split("/").filter(Boolean);
+  const screenId = segments[0] || "011";
+  const detailId = segments[1];
+  const groups = [];
+  SCREENS.forEach(s=>{ if(groups.indexOf(s.group)===-1) groups.push(s.group); });
+
+  const sidebarHtml = groups.map(g=>{
+    const items = SCREENS.filter(s=>s.group===g).map(s=>{
+      const active = screenId===s.id;
+      const style = active ? `style="background:#E6F1FB;color:${NAVY_DARK};border-right:3px solid ${NAVY}"` : "";
+      const cls = active ? "w-full text-left px-4 py-2 text-[12.5px] flex items-center gap-2 font-medium" : "w-full text-left px-4 py-2 text-[12.5px] flex items-center gap-2 text-gray-600 hover:bg-gray-50";
+      return `<button onclick="navigate('/${s.id}')" ${style} class="${cls}"><span class="font-mono text-[10px] text-gray-400 w-8">${s.id}</span>${s.name}</button>`;
+    }).join("");
+    return `<div class="py-2"><p class="px-4 text-[11px] font-medium text-gray-400 uppercase mb-1">${g}</p>${items}</div>`;
+  }).join("");
+
+  const renderFn = SCREEN_RENDER[screenId] || SCREEN_RENDER["011"];
+  const contentHtml = renderFn(detailId);
+
+  const breadcrumbHtml = `<div class="mb-2 flex items-center gap-1.5 text-[11px] text-gray-400"><span>#${path}</span>${detailId?`<i data-lucide="chevron-right" class="w-[11px] h-[11px]"></i><span class="text-gray-500">상세보기</span>`:""}</div>`;
+
+  document.getElementById("app").innerHTML = `
+    <div class="flex bg-gray-100 min-h-screen w-full">
+      <div class="w-64 bg-white border-r border-gray-200 overflow-y-auto" style="max-height:100vh">
+        <div class="px-4 py-4 border-b border-gray-100">
+          <p class="text-[13px] font-medium" style="color:${NAVY}">온기업(OnCorp) 화면설계서</p>
+          <p class="text-[11px] text-gray-400 mt-0.5">SFR-온기업-002 ~ 032 · 목록/상세 라우팅 지원</p>
+        </div>
+        ${sidebarHtml}
+      </div>
+      <div class="flex-1 p-6 overflow-y-auto" style="max-height:100vh">
+        ${breadcrumbHtml}
+        ${contentHtml}
+      </div>
+    </div>
+  `;
+  if(window.lucide) window.lucide.createIcons();
+}
+
+window.addEventListener("hashchange", render);
+window.addEventListener("DOMContentLoaded", render);
+render();
+</script>
+</body>
+</html>
